@@ -6,9 +6,6 @@ provider:
   name: aws
   runtime: python3.8
 
-plugins:
-  - serverless-websockets-plugin
-
 functions:
   websocket:
     handler: handler.connect
