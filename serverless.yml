@@ -1,0 +1,18 @@
+service: imu-mechanization-websocket
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.8
+
+plugins:
+  - serverless-websockets-plugin
+
+websocket:
+    handler: handler.connect
+    events:
+      - websocket: $connect
+      - websocket: $disconnect
+      - websocket:
+          route: $default
