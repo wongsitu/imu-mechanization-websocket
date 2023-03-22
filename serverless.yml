@@ -9,7 +9,8 @@ provider:
 plugins:
   - serverless-websockets-plugin
 
-websocket:
+functions:
+  websocket:
     handler: handler.connect
     events:
       - websocket: $connect
