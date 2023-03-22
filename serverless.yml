@@ -14,3 +14,8 @@ functions:
       - websocket: $disconnect
       - websocket:
           route: $default
+
+package:
+  exclude:
+    - node_modules/**
+    - .venv/**
