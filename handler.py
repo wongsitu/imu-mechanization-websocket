@@ -13,3 +13,4 @@ def default(event, context):
     message = body['message']
     print(f"Received message: {message} from {connection_id}")
     return {"statusCode": 200}
+
