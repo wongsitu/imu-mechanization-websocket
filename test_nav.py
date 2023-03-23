@@ -18,7 +18,7 @@ mag = pd.read_csv(os.path.join(datafile, 'Magnetometer.csv'))
 gps = pd.read_csv(os.path.join(datafile, 'Location.csv'))
 
 start = 0
-min_len = min(len(acc), len(acc_nog), len(gyr), len(mag), start + 10000)
+min_len = min(len(acc), len(acc_nog), len(gyr), len(mag), start + 1000000000)
 timestamps = acc.seconds_elapsed.to_numpy()[start:min_len]
 acc = acc[['x', 'y', 'z']].to_numpy()[start:min_len]
 acc_nog = acc_nog[['x', 'y', 'z']].to_numpy()[start:min_len]
@@ -37,7 +37,8 @@ nav = Nav(
     is_supercharged=False,
     drag_coeff=0.0038,
     smooth_fc=True,
-    fc_smoothing_critical_freq=0.01,
+    fc_smoothing_critical_freq=0.03,
+    imu_damping=0.05,
 )
 
 
@@ -86,24 +87,24 @@ for i, t in enumerate(timestamps):
 
 plt.figure()
 fc = np.array(fc)
-sns.lineplot(fc[:, 0], label='fc')
-sns.lineplot(fc[:, 1], label='emissions')
+sns.lineplot(y=fc[:, 0], x=timestamps / 60, label='fc')
+sns.lineplot(y=fc[:, 1], x=timestamps / 60, label='emissions')
 
 plt.figure()
-sns.lineplot(fc[:, 2], label='total fc')
-sns.lineplot(fc[:, 3], label='total emissions')
+sns.lineplot(y=fc[:, 2], x=timestamps / 60, label='total fc')
+sns.lineplot(y=fc[:, 3], x=timestamps / 60, label='total emissions')
 
 plt.figure()
 v = np.array(v)
-sns.lineplot(v[:, 0], label='vx')
-sns.lineplot(v[:, 1], label='vy')
+sns.lineplot(y=v[:, 0], x=timestamps / 60, label='vx')
+sns.lineplot(y=v[:, 1], x=timestamps / 60, label='vy')
 # sns.lineplot(v[:, 2], label='vz')
 # plt.ylim(23, 25)
 
 plt.figure()
 a = np.array(a)
-sns.lineplot(a[:, 0], label='ax')
-sns.lineplot(a[:, 1], label='ay')
-sns.lineplot(a[:, 2], label='az')
+sns.lineplot(y=a[:, 0], x=timestamps / 60, label='ax')
+sns.lineplot(y=a[:, 1], x=timestamps / 60, label='ay')
+sns.lineplot(y=a[:, 2], x=timestamps / 60, label='az')
 
 plt.show()

@@ -5,8 +5,6 @@ from collections import deque
 class LiveFilter:
     '''
     Base class for live filters
-
-    This class was obtained from https://www.samproell.io/posts/yarppg/yarppg-live-digital-filter/
     '''
 
     def process(self, x: float) -> np.ndarray:
@@ -25,8 +23,6 @@ class LiveFilter:
 class LiveSosFilter(LiveFilter):
     '''
     Live implementation of digital filter with second-order sections
-
-    This class was obtained from https://www.samproell.io/posts/yarppg/yarppg-live-digital-filter/
     '''
 
     def __init__(self, sos: np.ndarray) -> None:
@@ -85,10 +81,16 @@ class MultidimensionalLiveSosFilter:
 
 
 class LiveMeanFilter(LiveFilter):
-    '''Efficient moving average filter'''
+    '''
+    Efficient moving average filter
+    '''
 
-    def __init__(self, n: int) -> None:
-        '''Initialize the values'''
+    def __init__(self, n: int | None = None) -> None:
+        '''
+        Args:
+            n: int | None - Filter computes the mean of the n most recent values. 
+                If n == None, all values are considered.
+        '''
         self.vals = deque(maxlen=n)
         self.n = n
         self.n_inv = 1 / n
@@ -96,7 +98,9 @@ class LiveMeanFilter(LiveFilter):
         self.mean = 0
 
     def _process(self, x: float) -> float:
-        '''Update the simple moving average'''
+        '''
+        Update the simple moving average
+        '''
         if self.k < self.n:
             self.mean = self.mean * self.k + x
             self.k += 1
@@ -115,3 +119,9 @@ class LiveMeanFilter(LiveFilter):
 
     def __len__(self) -> int:
         return len(self.vals)
+
+    def get_mean(self):
+        '''
+        Return the current mean
+        '''
+        return self.mean

@@ -3,6 +3,7 @@ from datetime import datetime
 import numpy as np
 from scipy.signal import butter
 from ahrs.filters import EKF, Madgwick
+from geopy.distance import geodesic
 
 ######## Madgwick is *much* faster than EKF, but relative accuracy is unknown ########
 ######## Docs do not give info on which frame Madgwick uses ##########################
@@ -52,7 +53,8 @@ class Nav:
         is_supercharged: bool | None = None,
         drag_coeff: float | None = None,
         smooth_fc: bool = True,
-        fc_smoothing_critical_freq: float = 0.01,
+        fc_smoothing_critical_freq: float = 0.03,
+        imu_damping=0.1,
     ) -> None:
         '''
         Args:
@@ -80,6 +82,7 @@ class Nav:
         self.v_llf = np.zeros((3, 1))  # Velocity in the local level frame
         self.heading = None  # Heading of the car in degrees clockwise from North
         self.R_l2v = np.eye(3)
+        self.average_speed = LiveMeanFilter()
 
         # Initialize the filters for smoothing incomming accel and gyro data
         sos = butter(2, smoothing_critical_freq, output='sos', fs=None, btype='lowpass')
@@ -88,6 +91,7 @@ class Nav:
         self.gyro_filter = MultidimensionalLiveSosFilter(sos, shape=(3, 1))
 
         # Initialize time-related IMU parameters
+        self.t0 = None
         self.prev_timestamp = None
         self.period = initial_period  # IMU update period
         self.period_mean_filter = LiveMeanFilter(100)
@@ -97,6 +101,8 @@ class Nav:
         self.prev_alt = None
         self.v_z_filter = LiveMeanFilter(vz_depth)
         self.prev_alt_timestamp = None
+        self.total_distance = 0
+        self.prev_lat_long = None
 
         # Initialize parameters for the AHRS algorithm
         self.ahrs = None  # AHRS algorithm
@@ -129,6 +135,7 @@ class Nav:
         self.total_fc = 0
         sos = butter(2, fc_smoothing_critical_freq, output='sos', fs=None, btype='lowpass')
         self.fc_filter = LiveSosFilter(sos) if smooth_fc else None
+        self.imu_damping = imu_damping
 
     @staticmethod
     def _get_ref_field(lat: float, long: float, alt: float, return_inclination: bool = False) -> np.ndarray | float:
@@ -287,6 +294,10 @@ class Nav:
             None
         '''
 
+        ################## UPDATE THIS DEPENDING ON TIME UNITS ##############################################
+        if self.t0 is None:
+            self.t0 = timestamp
+
         # Can't really do much on the first iteration since we don't know delta t
         if self.prev_timestamp is None:
             self.prev_timestamp = timestamp
@@ -321,6 +332,7 @@ class Nav:
         # Rotate the acceleration (sans gravity) to the local level frame
         # accel_llf = self.R_s2l @ accel_no_g
         accel_llf = self._rotate_with_quaternion(self.Q_s2l, accel_no_g)  # Faster than rotating with the matrix
+        accel_llf = accel_llf * self.imu_damping
 
         # Update the velocity
         self.v_llf += timediff * accel_llf
@@ -337,6 +349,9 @@ class Nav:
 
         # Update the fuel consumption
         self._update_fuel_consumption(timediff)
+
+        # Update the average speed
+        self.average_speed.process(np.sqrt(self.v[1, 0] ** 2 + self.v[2, 0] ** 2))
 
     def process_gps_update(
         self, timestamp: float, lat: float, long: float, alt: float, heading: float, speed: float
@@ -413,6 +428,13 @@ class Nav:
         if alt is not None or speed is not None:
             self.v_llf = self.R_l2v.T @ self.v
 
+        # Update the total distance travelled
+        if self.prev_lat_long is None:
+            self.prev_lat_long = (lat, long)
+        else:
+            self.total_distance += geodesic((lat, long), self.prev_lat_long).meters
+            self.prev_lat_long = (lat, long)
+
     def get_motion(self) -> tuple[float]:
         '''
         Get the current velocity and acceleration
@@ -430,7 +452,7 @@ class Nav:
         reset: bool = False,
     ) -> None:
         '''
-        Set the vehicle parameters.  This must be done before calling get fuel consumption.
+        Set the vehicle parameters.  This must be done before calling get_fuel_and_emissions.
 
         Args:
             displacement: float | None - engine displacement
@@ -469,15 +491,11 @@ class Nav:
         Compute the instantaneous fuel consumption
 
         Args:
-            timestep: flaot - the currnnt timestep
+            timestep: float - the current timestep
 
         Returns:
             None:
         '''
-
-        if self.edi is None:
-            print('WARNING: Vehicle parameters not set. Call set_vehicle_params to set.')
-            return 0, 0
 
         # Get the vehicle speed and regression parameters
         speed = np.sqrt(self.v[1, 0] ** 2 + self.v[2, 0] ** 2)
@@ -504,4 +522,18 @@ class Nav:
             float - cumulative carbon emissions in kg
         '''
 
+        if self.edi is None:
+            print('WARNING: Vehicle parameters not set. Call set_vehicle_params to set.')
+            return 0, 0
+
         return self.current_fc, GAS_TO_CARBON * self.current_fc, self.total_fc, GAS_TO_CARBON * self.total_fc
+
+    def get_trip_metrics(self) -> tuple[float]:
+        '''
+        Compute aggregate metrics about the current trip
+
+        Returns:
+            tuple[float] - total distance travelled in meters, average speed in m / s, and elapsed time in s
+        '''
+        ################## UPDATE THIS DEPENDING ON TIME UNITS ##############################################
+        return self.total_distance, self.average_speed.get_mean(), self.prev_timestamp + self.period - self.t0
