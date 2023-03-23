@@ -7,7 +7,7 @@ from ahrs.filters import EKF, Madgwick
 ######## Madgwick is *much* faster than EKF, but relative accuracy is unknown ########
 ######## Docs do not give info on which frame Madgwick uses ##########################
 
-from livefilter import MultidimensionalLiveSosFilter, LiveMeanFilter
+from livefilter import LiveSosFilter, MultidimensionalLiveSosFilter, LiveMeanFilter
 from pyCRGI.pure import get_value
 
 
@@ -51,6 +51,7 @@ class Nav:
         displacement: float | None = None,
         is_supercharged: bool | None = None,
         drag_coeff: float | None = None,
+        smooth_fc: bool = True,
     ) -> None:
         '''
         Args:
@@ -115,11 +116,17 @@ class Nav:
             )
             self.edi = None
         else:
-            self.edi = self.get_edi(displacement, is_supercharged)
+            self.edi = self._get_edi(displacement, is_supercharged)
         self.drag_coeff = DEFAULT_DRAG if drag_coeff is None else AIR_DENSITY * drag_coeff * 0.5
 
+        # Instantiate parameters to track fuel use
+        # Update these every time we update the velocity
+        self.current_fc = 0
+        self.total_fc = 0
+        self.fc_filter = LiveSosFilter(sos) if smooth_fc else None
+
     @staticmethod
-    def get_ref_field(lat: float, long: float, alt: float, return_inclination: bool = False) -> np.ndarray | float:
+    def _get_ref_field(lat: float, long: float, alt: float, return_inclination: bool = False) -> np.ndarray | float:
         '''
         Get the reference field from pyCRGI
 
@@ -149,7 +156,7 @@ class Nav:
         return ref_field
 
     @staticmethod
-    def quaternion_to_matrix(q: np.ndarray) -> np.ndarray:
+    def _quaternion_to_matrix(q: np.ndarray) -> np.ndarray:
         '''
         Convert a normalized quaternion (in ENGO 623 notation) to a rotation matrix
 
@@ -178,7 +185,7 @@ class Nav:
         )
 
     @staticmethod
-    def rotate_with_quaternion(q: np.ndarray, v: np.ndarray) -> np.ndarray:
+    def _rotate_with_quaternion(q: np.ndarray, v: np.ndarray) -> np.ndarray:
         '''
         Rotate using the quaternion
         Faster than using the matrix approach
@@ -211,7 +218,7 @@ class Nav:
         )
 
     @staticmethod
-    def get_edi(displacement: float, is_supercharged: bool) -> int:
+    def _get_edi(displacement: float, is_supercharged: bool) -> int:
         '''
         Get the engine displacement index
 
@@ -236,7 +243,7 @@ class Nav:
         return edi
 
     @staticmethod
-    def get_fc_params(speed: float, edi: int) -> tuple[float]:
+    def _get_fc_params(speed: float, edi: int) -> tuple[float]:
         '''
         Get the regression coefficients for the linear fit of fuel consumption to VSP
 
@@ -292,7 +299,7 @@ class Nav:
         self.latest_smoothed_raw_imu = [accel, gyro, mag]
 
         # If we have no reference field, we have no orientation
-        if self.algo_initialized == False:
+        if not self.algo_initialized:
             # print('WARNING: Cannot update navigation without orientation. GPS update required')
             return
 
@@ -304,11 +311,11 @@ class Nav:
         self.Q_s2l = np.roll(self.Q_ahrs, -1)
 
         # Compute the updated rotation matrix
-        # self.R_s2l = self.quaternion_to_matrix(self.Q_s2l)
+        # self.R_s2l = self._quaternion_to_matrix(self.Q_s2l)
 
         # Rotate the acceleration (sans gravity) to the local level frame
         # accel_llf = self.R_s2l @ accel_no_g
-        accel_llf = self.rotate_with_quaternion(self.Q_s2l, accel_no_g)  # Faster than rotating with the matrix
+        accel_llf = self._rotate_with_quaternion(self.Q_s2l, accel_no_g)  # Faster than rotating with the matrix
 
         # Update the velocity
         self.v_llf += timediff * accel_llf
@@ -317,11 +324,14 @@ class Nav:
         # Heading vector in the LLF: [sin H, cos H, 0]
         # Need to rotate the y-axis of the local level frame to the align with the heading vector
         sinh, cosh = np.sin(self.heading * np.pi / 180), np.cos(self.heading * np.pi / 180)
-        self.R_l2v = np.array([[cosh, -sinh, 0], [sinh, cosh, 0], [0, 0, 1]])  ############## CHECK THIS ##############
+        self.R_l2v = np.array([[cosh, -sinh, 0], [sinh, cosh, 0], [0, 0, 1]])
 
         # Rotate the local level frame velocity and acceleration (sans gravity) to the vehicle frame
         self.v = self.R_l2v @ self.v_llf
         self.a = self.R_l2v @ accel_llf
+
+        # Update the fuel consumption
+        self._update_fuel_consumption(timediff)
 
     def process_gps_update(
         self, timestamp: float, lat: float, long: float, alt: float, heading: float, speed: float
@@ -345,13 +355,13 @@ class Nav:
         if self.latest_smoothed_raw_imu is None:
             return
 
-        if self.algo_initialized == False:
+        if not self.algo_initialized:
             self.algo_initialized = True
 
             # Initialize the AHRS algorithm
             if self.algo == 'ekf':
                 # Get the reference field at the current location
-                ref_field = self.get_ref_field(lat, long, alt)
+                ref_field = self._get_ref_field(lat, long, alt)
                 self.ahrs = EKF(
                     acc=self.latest_smoothed_raw_imu[0].reshape((1, 3)),
                     gyr=self.latest_smoothed_raw_imu[1].reshape((1, 3)),
@@ -372,7 +382,7 @@ class Nav:
             self.Q_s2l = np.roll(self.Q_ahrs, -1)
 
             # Compute the rotation matrix from smartphone to ENU frame
-            # self.R_s2l = self.quaternion_to_matrix(self.Q_s2l)
+            # self.R_s2l = self._quaternion_to_matrix(self.Q_s2l)
 
         # Update heading
         if heading is not None:
@@ -447,14 +457,17 @@ class Nav:
         if self.edi is not None and reset == False:
             param_warning()
             return
-        self.edi = self.get_edi(displacement, is_supercharged)
+        self.edi = self._get_edi(displacement, is_supercharged)
 
-    def get_fuel_consumption(self) -> tuple[float]:
+    def _update_fuel_consumption(self, timestep) -> None:
         '''
         Compute the instantaneous fuel consumption
 
+        Args:
+            timestep: flaot - the currnnt timestep
+
         Returns:
-            tuple[float]: best estimates of current fuel consumption and carbon emissions in mL / s
+            None:
         '''
 
         if self.edi is None:
@@ -463,16 +476,27 @@ class Nav:
 
         # Get the vehicle speed and regression parameters
         speed = np.sqrt(self.v[1, 0] ** 2 + self.v[2, 0] ** 2)
-        a, b = self.get_fc_params(speed, self.edi)
+        a, b = self._get_fc_params(speed, self.edi)
         v_norm = np.sqrt(self.v[0, 0] ** 2 + speed**2)
 
         # Compute vehicle specific power in m ** 2 / s ** 3
         vsp = 1.1 * (self.v * self.a).sum() + GRAVITY * self.v[2, 0] + self.drag_coeff * v_norm**3 + 0.132 * v_norm
 
-        # Fuel consumption in mL / s
-        fc = b if vsp <= 0 else a * vsp + b
+        # Fuel consumption in mL / s and L
+        self.current_fc = b if vsp <= 0 else a * vsp + b
+        if self.fc_filter is not None:
+            self.current_fc = self.fc_filter.process(self.current_fc)
+        self.total_fc += self.current_fc * timestep * 0.001
 
-        # CO2 emissions in mL / s
-        co2_equiv = GAS_TO_CARBON * fc
+    def get_fuel_and_emissions(self) -> tuple[float]:
+        '''
+        Return the best estimates of the current and cumulative fuel consumption and carbon emissions
 
-        return fc, co2_equiv
+        Returns:
+            float - best estimate of the current fuel consumption in mL / s
+            float - best estimate of the current carbon emissions in g / s
+            float - cumulative fuel consumption in L
+            float - cumulative carbon emissions in kg
+        '''
+
+        return self.current_fc, GAS_TO_CARBON * self.current_fc, self.total_fc, GAS_TO_CARBON * self.total_fc
