@@ -33,12 +33,13 @@ nav = Nav(
     vz_depth=3,
     initial_period=0.01,
     algo='madgwick',
-    displacement=2.2,
+    displacement=2.378,
     is_supercharged=False,
-    drag_coeff=0.0038,
+    drag_coeff=0.000641 / 0.07803855,
     smooth_fc=True,
-    fc_smoothing_critical_freq=0.03,
+    fc_smoothing_critical_freq=0.02,
     imu_damping=0.05,
+    fc_reduction_factor=0.5,
 )
 
 
@@ -67,6 +68,7 @@ time = []
 for i, t in enumerate(timestamps):
     if i % 1000 == 0:
         print(i / len(timestamps))
+        print(nav.get_trip_metrics())
 
     data = [t, *acc[i], *acc_nog[i], *gyr[i], *mag[i], None, None, None, None, None]
 
@@ -98,8 +100,7 @@ plt.figure()
 v = np.array(v)
 sns.lineplot(y=v[:, 0], x=timestamps / 60, label='vx')
 sns.lineplot(y=v[:, 1], x=timestamps / 60, label='vy')
-# sns.lineplot(v[:, 2], label='vz')
-# plt.ylim(23, 25)
+sns.lineplot(y=v[:, 2], x=timestamps / 60, label='vz')
 
 plt.figure()
 a = np.array(a)

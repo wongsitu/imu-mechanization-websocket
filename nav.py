@@ -14,8 +14,9 @@ from pyCRGI.pure import get_value
 
 GRAVITY = 9.80665  # m / s ** 2
 AIR_DENSITY = 1.225  # density at STP in kg / m ** 3
-DEFAULT_DRAG = AIR_DENSITY * 0.004834396004686504 * 0.5  # Mean drag coefficient over all cars
-GAS_TO_CARBON = 2.3  # 2.3 kg of CO2 produced for every litre of gasoline burned
+DRAG_CONVERSION = 0.07803855  # frontal area in drag is in 0.84 ft ** 2 - this converts to m ** 2
+DEFAULT_DRAG = AIR_DENSITY * 0.004834396004686504 * 0.5 * DRAG_CONVERSION  # Mean drag coefficient over all cars
+GAS_TO_CARBON = 2.31  # 2.31 kg of CO2 produced for every litre of gasoline burned
 
 # Data obtained from https://www.mdpi.com/2076-3417/9/7/1369, tables 5, 6
 REGRESSION_COEFFICIENTS = (
@@ -48,13 +49,14 @@ class Nav:
         smoothing_critical_freq: float = 0.03,
         vz_depth: int = 3,
         initial_period: float = 0.01,
-        algo: str = 'EKF',
+        algo: str = 'madgwick',
         displacement: float | None = None,
         is_supercharged: bool | None = None,
         drag_coeff: float | None = None,
         smooth_fc: bool = True,
-        fc_smoothing_critical_freq: float = 0.03,
-        imu_damping=0.1,
+        fc_smoothing_critical_freq: float = 0.02,
+        imu_damping: float = 0.1,
+        fc_reduction_factor: float = 0.5,
     ) -> None:
         '''
         Args:
@@ -67,10 +69,12 @@ class Nav:
             is_supercahrged: bool | None - Whether or not the vehicle is supercharged or turbocharged.
                 Can be set later with set_vehicle_params
             drag_coef: float | None - Drag coefficient times frontal area divided by vehicle mass.
-                Can be set later with set_vehicle_params
+                Can be set later with set_vehicle_params. The units for this are [0.84 ft ** 2 / kg]
             smooth_fc: bool - whether or not to smooth the outgoing fuel consumption values
             fc_smoothing_critical_freq: float - critical frequency of the butterworth filter applied to fuel
                 consumption
+            imu_damping: float - factor to damp the imu measurements as gps are more trustworthy
+            fc_reduction_factor: float - reduce emissions by this factor for accuracy
 
         Returns:
             None
@@ -112,8 +116,8 @@ class Nav:
 
         # Set the AHRS algorithm
         if (algo := algo.lower()) not in (valid_algos := ('ekf', 'madgwick')):
-            print(f'WARNING: algo must be one of {valid_algos}, not {algo}. Defaulting to EKF.')
-            algo = 'ekf'
+            print(f'WARNING: algo must be one of {valid_algos}, not {algo}. Defaulting to madgwick.')
+            algo = 'madgwick'
         self.algo = algo
         self.algo_initialized = False
 
@@ -127,7 +131,7 @@ class Nav:
             self.edi = None
         else:
             self.edi = self._get_edi(displacement, is_supercharged)
-        self.drag_coeff = DEFAULT_DRAG if drag_coeff is None else AIR_DENSITY * drag_coeff * 0.5
+        self.drag_coeff = DEFAULT_DRAG if drag_coeff is None else AIR_DENSITY * drag_coeff * 0.5 * DRAG_CONVERSION
 
         # Instantiate parameters to track fuel use
         # Update these every time we update the velocity
@@ -136,6 +140,7 @@ class Nav:
         sos = butter(2, fc_smoothing_critical_freq, output='sos', fs=None, btype='lowpass')
         self.fc_filter = LiveSosFilter(sos) if smooth_fc else None
         self.imu_damping = imu_damping
+        self.fc_reduction_factor = fc_reduction_factor
 
     @staticmethod
     def _get_ref_field(lat: float, long: float, alt: float, return_inclination: bool = False) -> np.ndarray | float:
@@ -473,7 +478,7 @@ class Nav:
             if self.drag_coeff != DEFAULT_DRAG and reset == False:
                 param_warning()
             else:
-                self.drag_coeff = AIR_DENSITY * drag_coeff * 0.5
+                self.drag_coeff = AIR_DENSITY * drag_coeff * 0.5 * DRAG_CONVERSION
 
         # Set the engine displacement index if displacement and is_supercharged are both supplied
         if displacement is None and is_supercharged is None:
@@ -507,9 +512,10 @@ class Nav:
 
         # Fuel consumption in mL / s and L
         self.current_fc = b if vsp <= 0 else a * vsp + b
+        self.current_fc *= self.fc_reduction_factor
         if self.fc_filter is not None:
             self.current_fc = self.fc_filter.process(self.current_fc)
-        self.total_fc += self.current_fc * timestep * 0.001
+        self.total_fc += self.current_fc * timestep * 0.001  # Convert mL to L
 
     def get_fuel_and_emissions(self) -> tuple[float]:
         '''
@@ -535,5 +541,11 @@ class Nav:
         Returns:
             tuple[float] - total distance travelled in meters, average speed in m / s, and elapsed time in s
         '''
+
         ################## UPDATE THIS DEPENDING ON TIME UNITS ##############################################
-        return self.total_distance, self.average_speed.get_mean(), self.prev_timestamp + self.period - self.t0
+        if self.prev_timestamp is None:
+            elapsed_time = 0
+        else:
+            elapsed_time = self.prev_timestamp + self.period - self.t0
+
+        return self.total_distance, self.average_speed.get_mean(), elapsed_time

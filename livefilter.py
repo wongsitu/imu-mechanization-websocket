@@ -88,12 +88,13 @@ class LiveMeanFilter(LiveFilter):
     def __init__(self, n: int | None = None) -> None:
         '''
         Args:
-            n: int | None - Filter computes the mean of the n most recent values. 
+            n: int | None - Filter computes the mean of the n most recent values.
                 If n == None, all values are considered.
         '''
         self.vals = deque(maxlen=n)
-        self.n = n
-        self.n_inv = 1 / n
+        self.unbounded = n is None
+        self.n = 0 if self.unbounded else n
+        self.n_inv = None if self.unbounded else 1 / n
         self.k = 0
         self.mean = 0
 
@@ -101,6 +102,15 @@ class LiveMeanFilter(LiveFilter):
         '''
         Update the simple moving average
         '''
+        if self.unbounded:
+            # self.vals has unbounded length
+            self.mean *= self.n
+            self.n += 1
+            self.mean += x
+            self.mean /= self.n
+            self.vals.append(x)
+            return self.mean
+
         if self.k < self.n:
             self.mean = self.mean * self.k + x
             self.k += 1
