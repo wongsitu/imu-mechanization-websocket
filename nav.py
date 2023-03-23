@@ -52,6 +52,7 @@ class Nav:
         is_supercharged: bool | None = None,
         drag_coeff: float | None = None,
         smooth_fc: bool = True,
+        fc_smoothing_critical_freq: float = 0.01,
     ) -> None:
         '''
         Args:
@@ -65,6 +66,9 @@ class Nav:
                 Can be set later with set_vehicle_params
             drag_coef: float | None - Drag coefficient times frontal area divided by vehicle mass.
                 Can be set later with set_vehicle_params
+            smooth_fc: bool - whether or not to smooth the outgoing fuel consumption values
+            fc_smoothing_critical_freq: float - critical frequency of the butterworth filter applied to fuel
+                consumption
 
         Returns:
             None
@@ -123,6 +127,7 @@ class Nav:
         # Update these every time we update the velocity
         self.current_fc = 0
         self.total_fc = 0
+        sos = butter(2, fc_smoothing_critical_freq, output='sos', fs=None, btype='lowpass')
         self.fc_filter = LiveSosFilter(sos) if smooth_fc else None
 
     @staticmethod

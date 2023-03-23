@@ -42,7 +42,7 @@ class LiveSosFilter(LiveFilter):
         Filter incoming data with cascaded second-order sections
         '''
         for s in range(self.n_sections):  # Apply filter sections in sequence
-            b0, b1, b2, a0, a1, a2 = self.sos[s, :]
+            b0, b1, b2, _, a1, a2 = self.sos[s, :]
 
             # Compute difference equations of transposed direct form II
             y = b0 * x + self.state[s, 0]
