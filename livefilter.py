@@ -5,8 +5,6 @@ from collections import deque
 class LiveFilter:
     '''
     Base class for live filters
-
-    This class was obtained from https://www.samproell.io/posts/yarppg/yarppg-live-digital-filter/
     '''
 
     def process(self, x: float) -> np.ndarray:
@@ -25,8 +23,6 @@ class LiveFilter:
 class LiveSosFilter(LiveFilter):
     '''
     Live implementation of digital filter with second-order sections
-
-    This class was obtained from https://www.samproell.io/posts/yarppg/yarppg-live-digital-filter/
     '''
 
     def __init__(self, sos: np.ndarray) -> None:
@@ -42,13 +38,47 @@ class LiveSosFilter(LiveFilter):
         Filter incoming data with cascaded second-order sections
         '''
         for s in range(self.n_sections):  # Apply filter sections in sequence
-            b0, b1, b2, a0, a1, a2 = self.sos[s, :]
+            b0, b1, b2, _, a1, a2 = self.sos[s, :]
 
             # Compute difference equations of transposed direct form II
             y = b0 * x + self.state[s, 0]
             self.state[s, 0] = b1 * x - a1 * y + self.state[s, 1]
             self.state[s, 1] = b2 * x - a2 * y
-            x = y  # Set biquad output as input of next filter section.
+            # x = y  # Set biquad output as input of next filter section.
+
+        return y
+
+
+class VectorizedLiveOneSectionSosFilter:
+    '''
+    Live implementation of digital filter with second-order sections, but vectorized and supports only one section
+    '''
+
+    def __init__(self, sos: np.ndarray, dim: int = 3) -> None:
+        '''
+        Initialize live second-order sections filter
+
+        Args:
+            sos: np.ndarray
+            dim: int
+        '''
+
+        self.sos = sos[0]
+        self.state = np.zeros((dim, 2))
+
+    def process(self, x: np.ndarray) -> float:
+        '''
+        Filter incoming data with cascaded second-order sections
+
+        Args:
+            x: np.ndarray of shape (dim, 1)
+        '''
+
+        b0, b1, b2, _, a1, a2 = self.sos
+
+        y = b0 * x + self.state[:, 0]
+        self.state[:, 0] = b1 * x - a1 * y + self.state[:, 1]
+        self.state[:, 1] = b2 * x - a2 * y
 
         return y
 
@@ -66,6 +96,7 @@ class MultidimensionalLiveSosFilter:
         else:
             raise ValueError(f'Input shape must be an integer or a tuple or list of integers, not {type(shape)}')
         self.shape = shape
+        self.len = np.prod(shape)
 
     def process(self, x: np.ndarray) -> np.ndarray:
         if not isinstance(x, np.ndarray):
@@ -80,23 +111,40 @@ class MultidimensionalLiveSosFilter:
         if x.shape != self.shape:
             raise ValueError(f'Invalid input of shape {x.shape} for filter of shape {self.shape}')
 
-        x = x.flatten()
-        return np.array([self.filters[i].process(x[i]) for i in range(len(x))]).reshape(self.shape)
+        x = x.reshape(self.len)
+        return np.array([self.filters[i].process(x[i]) for i in range(self.len)]).reshape(self.shape)
 
 
 class LiveMeanFilter(LiveFilter):
-    '''Efficient moving average filter'''
+    '''
+    Efficient moving average filter
+    '''
 
-    def __init__(self, n: int) -> None:
-        '''Initialize the values'''
+    def __init__(self, n: int | None = None) -> None:
+        '''
+        Args:
+            n: int | None - Filter computes the mean of the n most recent values.
+                If n == None, all values are considered.
+        '''
         self.vals = deque(maxlen=n)
-        self.n = n
-        self.n_inv = 1 / n
+        self.unbounded = n is None
+        self.n = 0 if self.unbounded else n
+        self.n_inv = None if self.unbounded else 1 / n
         self.k = 0
         self.mean = 0
 
     def _process(self, x: float) -> float:
-        '''Update the simple moving average'''
+        '''
+        Update the simple moving average
+        '''
+        if self.unbounded:
+            # self.vals has unbounded length
+            self.mean *= self.n
+            self.n += 1
+            self.mean = (self.mean + x) / self.n
+            self.vals.append(x)
+            return self.mean
+
         if self.k < self.n:
             self.mean = self.mean * self.k + x
             self.k += 1
@@ -115,3 +163,9 @@ class LiveMeanFilter(LiveFilter):
 
     def __len__(self) -> int:
         return len(self.vals)
+
+    def get_mean(self):
+        '''
+        Return the current mean
+        '''
+        return self.mean
