@@ -64,31 +64,31 @@ def updateIMUFast(
     if gyr is None:
         return q
     qDot = 0.5 * q_prod(q, [0, *gyr])  # (eq. 12)
-    a_norm = norm3(acc)
-    if a_norm > 0:
-        a = acc / a_norm
-        q /= norm4(q)
-        _, qx, qy, qz = q
-        qw2, qx2, qy2, qz2 = 2 * q
-        # Gradient objective function (eq. 25) and Jacobian (eq. 26)
-        f = np.array(
-            [
-                (qx2 * qz - qw2 * qy) - a[0],
-                (qw2 * qx + qy2 * qz) - a[1],
-                2.0 * (0.5 - qx**2 - qy**2) - a[2],
-            ]
-        )  # (eq. 25)
-        J = np.array(
-            [
-                [-qy2, qz2, -qw2, qx2],
-                [qx2, qw2, qz2, qy2],
-                [0.0, -4.0 * qx, -4.0 * qy, 0.0],
-            ]
-        )  # (eq. 26)
-        # Objective Function Gradient
-        gradient = J.T @ f  # (eq. 34)
-        gradient /= norm4(gradient)
-        qDot -= gain * gradient  # (eq. 33)
+
+    a = acc / norm3(acc)
+    q /= norm4(q)
+    _, qx, qy, qz = q
+    qw2, qx2, qy2, qz2 = 2 * q
+    # Gradient objective function (eq. 25) and Jacobian (eq. 26)
+    f = np.array(
+        [
+            (qx2 * qz - qw2 * qy) - a[0],
+            (qw2 * qx + qy2 * qz) - a[1],
+            2.0 * (0.5 - qx**2 - qy**2) - a[2],
+        ]
+    )  # (eq. 25)
+    J = np.array(
+        [
+            [-qy2, qz2, -qw2, qx2],
+            [qx2, qw2, qz2, qy2],
+            [0.0, -4.0 * qx, -4.0 * qy, 0.0],
+        ]
+    )  # (eq. 26)
+    # Objective Function Gradient
+    gradient = J.T @ f  # (eq. 34)
+    gradient /= norm4(gradient)
+    qDot -= gain * gradient  # (eq. 33)
+
     q += qDot * dt  # (eq. 13)
     q /= norm4(q)
     return q
@@ -122,68 +122,71 @@ def updateMARGFast(
     if mag is None:
         return updateIMUFast(q, gyr, acc, dt=dt)
     qDot = 0.5 * q_prod(q, [0, *gyr])  # (eq. 12)
-    a_norm = norm3(acc)
-    if a_norm > 0:
-        a = acc / a_norm
-        m = mag / norm3(mag)
-        # Rotate normalized magnetometer measurements
-        h = q_prod(q, q_prod([0, *m], q_conj(q)))  # (eq. 45)
-        bx = sqrt(h[1] ** 2 + h[2] ** 2)  # (eq. 46)
-        bz = h[3]
-        qw, qx, qy, qz = q / norm4(q)
-        # Gradient objective function (eq. 31) and Jacobian (eq. 32)
 
-        qxqz = qx * qz
-        qyqz = qy * qz
-        qwqx = qw * qx
-        qwqy = qw * qy
+    a = acc / norm3(acc)
+    m = mag / norm3(mag)
+    # Rotate normalized magnetometer measurements
+    h = q_prod(q, q_prod([0, *m], q_conj(q)))  # (eq. 45)
+    bx = sqrt(h[1] ** 2 + h[2] ** 2)  # (eq. 46)
+    bz = h[3]
+    qw, qx, qy, qz = q / norm4(q)
+    # Gradient objective function (eq. 31) and Jacobian (eq. 32)
 
-        qxsqpqysq = qx * qx + qy * qy
+    qxqz = qx * qz
+    qyqz = qy * qz
+    qwqx = qw * qx
+    qwqy = qw * qy
 
-        bx2 = 2.0 * bx
-        bz2 = 2.0 * bz
+    qxsqpqysq = qx * qx + qy * qy
 
-        qx2 = 2.0 * qx
-        qy2 = 2.0 * qy
-        qz2 = 2.0 * qz
-        qw2 = 2.0 * qw
+    bx2 = 2.0 * bx
+    bz2 = 2.0 * bz
 
-        qx4 = 2.0 * qx2
-        qy4 = 2.0 * qy2
+    qx2 = 2.0 * qx
+    qy2 = 2.0 * qy
+    qz2 = 2.0 * qz
+    qw2 = 2.0 * qw
 
-        bx2qx = bx2 * qx
-        bx2qy = bx2 * qy
-        bx2qz = bx2 * qz
-        bx2qw = bx2 * qw
+    qx4 = 2.0 * qx2
+    qy4 = 2.0 * qy2
 
-        bz2qx = bz2 * qx
-        bz2qy = bz2 * qy
-        bz2qz = bz2 * qz
-        bz2qw = bz2 * qw
+    bx2qx = bx2 * qx
+    bx2qy = bx2 * qy
+    bx2qz = bx2 * qz
+    bx2qw = bx2 * qw
 
-        f = np.array(
-            [
-                2.0 * (qxqz - qwqy) - a[0],
-                2.0 * (qwqx + qyqz) - a[1],
-                2.0 * (0.5 - qxsqpqysq) - a[2],
-                bx2 * (0.5 - qy**2 - qz**2) + bz2 * (qxqz - qwqy) - m[0],
-                bx2 * (qx * qy - qw * qz) + bz2 * (qwqx + qyqz) - m[1],
-                bx2 * (qwqy + qx * qz) + bz2 * (0.5 - qxsqpqysq) - m[2],
-            ]
-        )  # (eq. 31)
-        J = np.array(
-            [
-                [-qy2, qz2, -qw2, qx2],
-                [qx2, qw2, qz2, qy2],
-                [0.0, -qx4, -qy4, 0.0],
-                [-bz2qy, bz2qz, -bx * qy4 - bz2qw, -2.0 * bx2qz + bz2qx],
-                [-bx2qz + bz2qx, bx2qy + bz2qw, bx2qx + bz2qz, -bx2qw + bz2qy],
-                [bx2qy, bx2qz - bz * qx4, bx2qw - bz * qy4, bx2qx],
-            ]
-        )  # (eq. 32)
-        gradient = J.T @ f  # (eq. 34)
-        gradient /= norm4(gradient)
-        qDot -= gain * gradient  # (eq. 33)
+    bz2qx = bz2 * qx
+    bz2qy = bz2 * qy
+    bz2qz = bz2 * qz
+    bz2qw = bz2 * qw
+
+    qwqxpqyqz = qwqx + qyqz
+    qxqzmqwqy = qxqz - qwqy
+
+    f = np.array(
+        [
+            2.0 * qxqzmqwqy - a[0],
+            2.0 * qwqxpqyqz - a[1],
+            2.0 * (0.5 - qxsqpqysq) - a[2],
+            bx - bx2qy * qy - bx2qz * qz + bz2 * qxqzmqwqy - m[0],
+            bx2qx * qy - bx2qw * qz + bz2 * qwqxpqyqz - m[1],
+            bx2 * (qwqy + qxqz) + bz2 * (0.5 - qxsqpqysq) - m[2],
+        ]
+    )  # (eq. 31)
+    J = np.array(
+        [
+            [-qy2, qz2, -qw2, qx2],
+            [qx2, qw2, qz2, qy2],
+            [0.0, -qx4, -qy4, 0.0],
+            [-bz2qy, bz2qz, -bx * qy4 - bz2qw, -2.0 * bx2qz + bz2qx],
+            [-bx2qz + bz2qx, bx2qy + bz2qw, bx2qx + bz2qz, -bx2qw + bz2qy],
+            [bx2qy, bx2qz - bz * qx4, bx2qw - bz * qy4, bx2qx],
+        ]
+    )  # (eq. 32)
+    gradient = J.T @ f  # (eq. 34)
+    gradient /= norm4(gradient)
+    qDot -= gain * gradient  # (eq. 33)
+
     q += qDot * dt  # (eq. 13)
     q /= norm4(q)
     return q

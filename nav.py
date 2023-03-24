@@ -324,7 +324,8 @@ class Nav:
         # Update the AHRS algo for orientation information
         if self.algo == 'madgwick':
             # self.Q_ahrs = self.ahrs.updateMARG(self.Q_ahrs, gyr=gyro, acc=accel, mag=mag)
-            self.Q_ahrs = updateMARGFast(self.Q_ahrs, gyr=gyro, acc=accel, mag=mag, dt=timediff)
+            self.Q_ahrs2 = updateMARGFast(self.Q_ahrs, gyr=gyro, acc=accel, mag=mag, dt=timediff)
+            # print(abs(self.Q_ahrs - self.Q_ahrs2).sum())
         elif self.algo == 'ekf':
             self.Q_ahrs = self.ahrs.update(self.Q_ahrs, gyr=gyro, acc=accel, mag=mag)
         self.Q_s2l = np.array([self.Q_ahrs[1], self.Q_ahrs[2], self.Q_ahrs[3], self.Q_ahrs[0]])
