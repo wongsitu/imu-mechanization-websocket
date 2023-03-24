@@ -191,11 +191,13 @@ class Nav:
         q2q4 = q2 * q4
         q1q4 = q1 * q4
         q2q3 = q2 * q3
+        qq2mqq3 = qq2 - qq3
+        qq4mqq1 = qq4 - qq1
         return np.array(
             [
                 [qq1 - qq2 - qq3 + qq4, 2 * (q1q2 - q3q4), 2 * (q1q3 + q2q4)],
-                [2 * (q1q2 + q3q4), qq2 + qq4 - qq1 - qq3, 2 * (q2q3 - q1q4)],
-                [2 * (q1q3 - q2q4), 2 * (q2q3 + q1q4), qq3 + qq4 - qq1 - qq2],
+                [2 * (q1q2 + q3q4), qq4mqq1 + qq2mqq3, 2 * (q2q3 - q1q4)],
+                [2 * (q1q3 - q2q4), 2 * (q2q3 + q1q4), qq4mqq1 - qq2mqq3],
             ]
         )
 
@@ -216,9 +218,9 @@ class Nav:
         q0, q1, q2, q3 = q
         v0, v1, v2 = v
 
-        a = 2 * (q0 * v0 + q1 * v1 + q2 * v2)
+        a = 2.0 * (q0 * v0 + q1 * v1 + q2 * v2)
         b = q3 * q3 - q0 * q0 - q1 * q1 - q2 * q2
-        c = 2 * q3
+        c = 2.0 * q3
 
         qxv0 = q1 * v2 - q2 * v1
         qxv1 = q2 * v0 - q0 * v2
@@ -324,8 +326,7 @@ class Nav:
         # Update the AHRS algo for orientation information
         if self.algo == 'madgwick':
             # self.Q_ahrs = self.ahrs.updateMARG(self.Q_ahrs, gyr=gyro, acc=accel, mag=mag)
-            self.Q_ahrs2 = updateMARGFast(self.Q_ahrs, gyr=gyro, acc=accel, mag=mag, dt=timediff)
-            # print(abs(self.Q_ahrs - self.Q_ahrs2).sum())
+            self.Q_ahrs = updateMARGFast(self.Q_ahrs, gyr=gyro, acc=accel, mag=mag, dt=timediff)
         elif self.algo == 'ekf':
             self.Q_ahrs = self.ahrs.update(self.Q_ahrs, gyr=gyro, acc=accel, mag=mag)
         self.Q_s2l = np.array([self.Q_ahrs[1], self.Q_ahrs[2], self.Q_ahrs[3], self.Q_ahrs[0]])
