@@ -76,9 +76,9 @@ class VectorizedLiveOneSectionSosFilter:
 
         b0, b1, b2, _, a1, a2 = self.sos
 
-        y = b0 * x + self.state[:, 0:1]
-        self.state[:, 0:1] = b1 * x - a1 * y + self.state[:, 1:]
-        self.state[:, 1:] = b2 * x - a2 * y
+        y = b0 * x + self.state[:, 0]
+        self.state[:, 0] = b1 * x - a1 * y + self.state[:, 1]
+        self.state[:, 1] = b2 * x - a2 * y
 
         return y
 
@@ -112,7 +112,7 @@ class MultidimensionalLiveSosFilter:
             raise ValueError(f'Invalid input of shape {x.shape} for filter of shape {self.shape}')
 
         x = x.reshape(self.len)
-        return np.array([self.filters[i].process(x[i]) for i in range(len(x))]).reshape(self.shape)
+        return np.array([self.filters[i].process(x[i]) for i in range(self.len)]).reshape(self.shape)
 
 
 class LiveMeanFilter(LiveFilter):

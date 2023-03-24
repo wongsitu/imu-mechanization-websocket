@@ -31,7 +31,7 @@ gps = gps[gps.seconds_elapsed > timestamps[0]].to_numpy()
 nav = Nav(
     smoothing_critical_freq=0.03,
     vz_depth=3,
-    initial_period=0.01,
+    period=0.01,
     algo='madgwick',
     displacement=2.378,
     is_supercharged=False,
@@ -47,10 +47,10 @@ def run_nav(nav, data_batch):
     for data in data_batch:
         timestamp, ax, ay, az, ax_nog, ay_nog, az_nog, gx, gy, gz, mx, my, mz, lat, long, alt, heading, speed = data
 
-        acc = np.array([[ax], [ay], [az]]) * GRAVITY
-        acc_nog = np.array([[ax_nog], [ay_nog], [az_nog]]) * GRAVITY
-        gyr = np.array([[gx], [gy], [gz]])
-        mag = np.array([[mx], [my], [mz]])
+        acc = np.array([ax, ay, az]) * GRAVITY
+        acc_nog = np.array([ax_nog, ay_nog, az_nog]) * GRAVITY
+        gyr = np.array([gx, gy, gz])
+        mag = np.array([mx, my, mz])
 
         nav.process_imu_update(timestamp, acc, acc_nog, gyr, mag)
         if lat is not None:
@@ -113,19 +113,18 @@ plt.show()
 
 import time
 
-a = np.random.rand(3, 1)
-b = np.random.rand(3)
-
-a = 10
+a = 15.3458
+b = 0.3463256
 
 t = time.perf_counter()
-for _ in range(10000):
-    a = a * 2 - a
+for _ in range(100000):
+    c = a * b
+    d = a * b
 print(time.perf_counter() - t)
-print(a)
 
 t = time.perf_counter()
-for _ in range(10000):
-    a *= 2
-    a -= a
+for _ in range(100000):
+    ab = a * b
+    c = ab
+    d = ab
 print(time.perf_counter() - t)

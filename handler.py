@@ -31,7 +31,7 @@ def set_nav(displacement=None, is_supercharged=None, drag_coeff=None):
     nav = Nav(
         smoothing_critical_freq=0.03,
         vz_depth=3,
-        initial_period=0.01,
+        period=0.01,
         algo='madgwick',
         smooth_fc=True,
         fc_smoothing_critical_freq=0.02,
