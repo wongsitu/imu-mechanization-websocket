@@ -44,7 +44,41 @@ class LiveSosFilter(LiveFilter):
             y = b0 * x + self.state[s, 0]
             self.state[s, 0] = b1 * x - a1 * y + self.state[s, 1]
             self.state[s, 1] = b2 * x - a2 * y
-            x = y  # Set biquad output as input of next filter section.
+            # x = y  # Set biquad output as input of next filter section.
+
+        return y
+
+
+class VectorizedLiveOneSectionSosFilter:
+    '''
+    Live implementation of digital filter with second-order sections, but vectorized and supports only one section
+    '''
+
+    def __init__(self, sos: np.ndarray, dim: int = 3) -> None:
+        '''
+        Initialize live second-order sections filter
+
+        Args:
+            sos: np.ndarray
+            dim: int
+        '''
+
+        self.sos = sos[0]
+        self.state = np.zeros((dim, 2))
+
+    def process(self, x: np.ndarray) -> float:
+        '''
+        Filter incoming data with cascaded second-order sections
+
+        Args:
+            x: np.ndarray of shape (dim, 1)
+        '''
+
+        b0, b1, b2, _, a1, a2 = self.sos
+
+        y = b0 * x + self.state[:, 0:1]
+        self.state[:, 0:1] = b1 * x - a1 * y + self.state[:, 1:]
+        self.state[:, 1:] = b2 * x - a2 * y
 
         return y
 
@@ -62,6 +96,7 @@ class MultidimensionalLiveSosFilter:
         else:
             raise ValueError(f'Input shape must be an integer or a tuple or list of integers, not {type(shape)}')
         self.shape = shape
+        self.len = np.prod(shape)
 
     def process(self, x: np.ndarray) -> np.ndarray:
         if not isinstance(x, np.ndarray):
@@ -76,7 +111,7 @@ class MultidimensionalLiveSosFilter:
         if x.shape != self.shape:
             raise ValueError(f'Invalid input of shape {x.shape} for filter of shape {self.shape}')
 
-        x = x.flatten()
+        x = x.reshape(self.len)
         return np.array([self.filters[i].process(x[i]) for i in range(len(x))]).reshape(self.shape)
 
 
@@ -106,8 +141,7 @@ class LiveMeanFilter(LiveFilter):
             # self.vals has unbounded length
             self.mean *= self.n
             self.n += 1
-            self.mean += x
-            self.mean /= self.n
+            self.mean = (self.mean + x) / self.n
             self.vals.append(x)
             return self.mean
 

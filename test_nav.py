@@ -18,7 +18,7 @@ mag = pd.read_csv(os.path.join(datafile, 'Magnetometer.csv'))
 gps = pd.read_csv(os.path.join(datafile, 'Location.csv'))
 
 start = 0
-min_len = min(len(acc), len(acc_nog), len(gyr), len(mag), start + 1000000000)
+min_len = min(len(acc), len(acc_nog), len(gyr), len(mag), start + 50000)
 timestamps = acc.seconds_elapsed.to_numpy()[start:min_len]
 acc = acc[['x', 'y', 'z']].to_numpy()[start:min_len]
 acc_nog = acc_nog[['x', 'y', 'z']].to_numpy()[start:min_len]
@@ -109,3 +109,23 @@ sns.lineplot(y=a[:, 1], x=timestamps / 60, label='ay')
 sns.lineplot(y=a[:, 2], x=timestamps / 60, label='az')
 
 plt.show()
+
+
+import time
+
+a = np.random.rand(3, 1)
+b = np.random.rand(3)
+
+a = 10
+
+t = time.perf_counter()
+for _ in range(10000):
+    a = a * 2 - a
+print(time.perf_counter() - t)
+print(a)
+
+t = time.perf_counter()
+for _ in range(10000):
+    a *= 2
+    a -= a
+print(time.perf_counter() - t)

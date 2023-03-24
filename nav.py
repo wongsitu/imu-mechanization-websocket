@@ -5,10 +5,7 @@ from scipy.signal import butter
 from ahrs.filters import EKF, Madgwick
 from geopy.distance import geodesic
 
-######## Madgwick is *much* faster than EKF, but relative accuracy is unknown ########
-######## Docs do not give info on which frame Madgwick uses ##########################
-
-from livefilter import LiveSosFilter, MultidimensionalLiveSosFilter, LiveMeanFilter
+from livefilter import LiveSosFilter, MultidimensionalLiveSosFilter, LiveMeanFilter, VectorizedLiveOneSectionSosFilter
 from pyCRGI.pure import get_value
 
 
@@ -90,9 +87,9 @@ class Nav:
 
         # Initialize the filters for smoothing incomming accel and gyro data
         sos = butter(2, smoothing_critical_freq, output='sos', fs=None, btype='lowpass')
-        self.accel_filter = MultidimensionalLiveSosFilter(sos, shape=(3, 1))
-        self.accel_no_g_filter = MultidimensionalLiveSosFilter(sos, shape=(3, 1))
-        self.gyro_filter = MultidimensionalLiveSosFilter(sos, shape=(3, 1))
+        self.accel_filter = VectorizedLiveOneSectionSosFilter(sos, dim=3)
+        self.accel_no_g_filter = VectorizedLiveOneSectionSosFilter(sos, dim=3)
+        self.gyro_filter = VectorizedLiveOneSectionSosFilter(sos, dim=3)
 
         # Initialize time-related IMU parameters
         self.t0 = None
@@ -116,7 +113,7 @@ class Nav:
 
         # Set the AHRS algorithm
         if (algo := algo.lower()) not in (valid_algos := ('ekf', 'madgwick')):
-            print(f'WARNING: algo must be one of {valid_algos}, not {algo}. Defaulting to madgwick.')
+            print(f'WARNING: algo must be one of {valid_algos}, not {algo}. Defaulting to Madgwick.')
             algo = 'madgwick'
         self.algo = algo
         self.algo_initialized = False
@@ -184,7 +181,7 @@ class Nav:
             np.ndarray of shape (3, 3)
         '''
 
-        q = q.flatten()
+        q = q.reshape(4)
         q1, q2, q3, q4 = q
         qq1, qq2, qq3, qq4 = q * q
         q1q2 = q1 * q2
@@ -326,9 +323,11 @@ class Nav:
 
         # Update the AHRS algo for orientation information
         if self.algo == 'madgwick':
-            self.Q_ahrs = self.ahrs.updateMARG(self.Q_ahrs, gyr=gyro.flatten(), acc=accel.flatten(), mag=mag.flatten())
+            self.Q_ahrs = self.ahrs.updateMARG(
+                self.Q_ahrs, gyr=gyro.reshape(3), acc=accel.reshape(3), mag=mag.reshape(3)
+            )
         elif self.algo == 'ekf':
-            self.Q_ahrs = self.ahrs.update(self.Q_ahrs, gyr=gyro.flatten(), acc=accel.flatten(), mag=mag.flatten())
+            self.Q_ahrs = self.ahrs.update(self.Q_ahrs, gyr=gyro.reshape(3), acc=accel.reshape(3), mag=mag.reshape(3))
         self.Q_s2l = np.roll(self.Q_ahrs, -1)
 
         # Compute the updated rotation matrix
@@ -542,7 +541,7 @@ class Nav:
             tuple[float] - total distance travelled in meters, average speed in m / s, and elapsed time in s
         '''
 
-        ################## UPDATE THIS DEPENDING ON TIME UNITS ##############################################
+        ################################### UPDATE THIS DEPENDING ON TIME UNITS ###################################
         if self.prev_timestamp is None:
             elapsed_time = 0
         else:
