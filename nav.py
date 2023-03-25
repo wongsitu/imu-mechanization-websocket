@@ -15,8 +15,13 @@ GRAVITY = 9.80665  # m / s ** 2
 AIR_DENSITY = 1.225  # density at STP in kg / m ** 3
 DRAG_CONVERSION = 0.07803855  # frontal area in drag is in 0.84 ft ** 2 - this converts to m ** 2
 DEFAULT_DRAG = AIR_DENSITY * 0.004834396004686504 * 0.5 * DRAG_CONVERSION  # Mean drag coefficient over all cars
-GAS_TO_CARBON = 2.31  # 2.31 kg of CO2 produced for every litre of gasoline burned
 DEG_TO_RAD = pi / 180
+GAS_TO_EMISSIONS = 2.31  # 2.31 kg of CO2 produced for every litre of gasoline burned
+EMISSIONS_TO_CO2 = 0.95  # proportion of CO2 produced
+EMISSIONS_TO_CO = 0.01  # proportion of CO produced
+EMISSIONS_TO_NOX = 0.021  # proportion of nitrous oxides produced
+EMISSIONS_TO_PARTICULATE = 0.0005  # proportion of particulate matter produced
+EMISSIONS_TO_HC = 0.019  # proportion of unburned hydrocarbons produced
 
 # Data obtained from https://www.mdpi.com/2076-3417/9/7/1369, tables 5, 6
 REGRESSION_COEFFICIENTS = (
@@ -134,8 +139,8 @@ class Nav:
 
         # Instantiate parameters to track fuel use
         # Update these every time we update the velocity
-        self.current_fc = 0
-        self.total_fc = 0
+        self.current_fc = 0  # Current fuel consumption in mL / s
+        self.total_fc = 0  # Total fuel consumption in L
         sos = butter(2, fc_smoothing_critical_freq, output='sos', fs=None, btype='lowpass')
         self.fc_filter = LiveSosFilter(sos) if smooth_fc else None
         self.imu_damping = imu_damping
@@ -517,22 +522,47 @@ class Nav:
             self.current_fc = self.fc_filter.process(self.current_fc)
         self.total_fc += self.current_fc * timestep * 0.001  # Convert mL to L
 
-    def get_fuel_and_emissions(self) -> tuple[float]:
+    def get_fuel_and_emissions(self) -> dict:
         '''
-        Return the best estimates of the current and cumulative fuel consumption and carbon emissions
+        Return the best estimates of the current and cumulative fuel consumption and emissions
 
         Returns:
-            float - best estimate of the current fuel consumption in mL / s
-            float - best estimate of the current carbon emissions in g / s
-            float - cumulative fuel consumption in L
-            float - cumulative carbon emissions in kg
+            dict: Current and total fuel consumption and emissions information.
+                Keys indicate the type of emission.
+                Values are tuples of size (2,).  The first element is the current usage in mL/s for 
+                fuel and 
         '''
 
         if self.edi is None:
             print('WARNING: Vehicle parameters not set. Call set_vehicle_params to set.')
             return 0, 0
 
-        return self.current_fc, GAS_TO_CARBON * self.current_fc, self.total_fc, GAS_TO_CARBON * self.total_fc
+        emissions_current = GAS_TO_EMISSIONS * self.current_fc
+        emissions_total = GAS_TO_EMISSIONS * self.total_fc
+
+        co2_current = EMISSIONS_TO_CO2 * emissions_current
+        co2_total = EMISSIONS_TO_CO2 * emissions_total
+
+        co_current = EMISSIONS_TO_CO * emissions_current
+        co_total = EMISSIONS_TO_CO * emissions_total
+
+        nox_current = EMISSIONS_TO_NOX * emissions_current
+        nox_total = EMISSIONS_TO_NOX * emissions_total
+
+        particulate_current = EMISSIONS_TO_PARTICULATE * emissions_current
+        particulate_total = EMISSIONS_TO_PARTICULATE * emissions_total
+
+        hc_current = EMISSIONS_TO_HC * emissions_current
+        hc_total = EMISSIONS_TO_HC * emissions_total
+
+        return {
+            'fuel': (self.current_fc, self.total_fc),
+            'CO2': (co2_current, co2_total),
+            'CO': (co_current, co_total),
+            'NOx': (nox_current, nox_total),
+            'particulate': (particulate_current, particulate_total),
+            'HC': (hc_current, hc_total),
+        }
 
     def get_trip_metrics(self) -> tuple[float]:
         '''
