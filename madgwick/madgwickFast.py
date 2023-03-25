@@ -67,13 +67,17 @@ def updateIMUFast(
 
     a = acc / norm3(acc)
     qw, qx, qy, qz = q / norm4(q)
-    qw2, qx2, qy2, qz2 = 2 * qw, 2 * qx, 2 * qy, 2 * qz
+    qw2 = 2 * qw
+    qx2 = 2 * qx
+    qy2 = 2 * qy
+    qz2 = 2 * qz
+
     # Gradient objective function (eq. 25) and Jacobian (eq. 26)
     f = np.array(
         [
             qx2 * qz - qw2 * qy - a[0],
             qw2 * qx + qy2 * qz - a[1],
-            2.0 * (0.5 - qx**2 - qy**2) - a[2],
+            2.0 * (0.5 - qx * qx - qy * qy) - a[2],
         ]
     )  # (eq. 25)
     J = np.array(
@@ -126,11 +130,11 @@ def updateMARGFast(
     m = mag / norm3(mag)
     # Rotate normalized magnetometer measurements
     h = q_prod(q, q_prod([0, *m], q_conj(q)))  # (eq. 45)
-    bx = sqrt(h[1] ** 2 + h[2] ** 2)  # (eq. 46)
+    bx = sqrt(h[1] * h[1] + h[2] * h[2])  # (eq. 46)
     bz = h[3]
     qw, qx, qy, qz = q / norm4(q)
-    # Gradient objective function (eq. 31) and Jacobian (eq. 32)
 
+    # Gradient objective function (eq. 31) and Jacobian (eq. 32)
     qxqz = qx * qz
     qyqz = qy * qz
     qwqx = qw * qx
@@ -191,11 +195,11 @@ def updateMARGFast(
 
 
 def norm3(x):
-    return sqrt(x[0] ** 2 + x[1] ** 2 + x[2] ** 2)
+    return sqrt(x[0] * x[0] + x[1] * x[1] + x[2] * x[2])
 
 
 def norm4(x):
-    return sqrt(x[0] ** 2 + x[1] ** 2 + x[2] ** 2 + x[3] ** 2)
+    return sqrt(x[0] * x[0] + x[1] * x[1] + x[2] * x[2] + x[3] * x[3])
 
 
 def q_conj(q: np.ndarray) -> np.ndarray:
@@ -237,3 +241,4 @@ def q_prod(p: np.ndarray, q: np.ndarray) -> np.ndarray:
     pq[2] = p[0] * q[2] - p[1] * q[3] + p[2] * q[0] + p[3] * q[1]
     pq[3] = p[0] * q[3] + p[1] * q[2] - p[2] * q[1] + p[3] * q[0]
     return pq
+
