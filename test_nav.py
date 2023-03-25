@@ -18,7 +18,7 @@ mag = pd.read_csv(os.path.join(datafile, 'Magnetometer.csv'))
 gps = pd.read_csv(os.path.join(datafile, 'Location.csv'))
 
 start = 0
-min_len = min(len(acc), len(acc_nog), len(gyr), len(mag), start + 10000)
+min_len = min(len(acc), len(acc_nog), len(gyr), len(mag), start + 10000000)
 timestamps = acc.seconds_elapsed.to_numpy()[start:min_len]
 acc = acc[['x', 'y', 'z']].to_numpy()[start:min_len]
 acc_nog = acc_nog[['x', 'y', 'z']].to_numpy()[start:min_len]
@@ -133,17 +133,14 @@ plt.show()
 
 import time
 
-a = 15.3458
-b = 0.3463256
-c = 29.38475
-d = 93.2845
+r = [np.random.rand() for _ in range(3)]
 
 t = time.perf_counter()
-for _ in range(100000):
-    e = np.array([a, b, c]) * d
+for _ in range(1000000):
+    e = r[0] ** 3 + r[1] ** 3 + r[2] ** 3
 print(time.perf_counter() - t)
 
 t = time.perf_counter()
-for _ in range(100000):
-    e = np.array([a * d, b * d, c * d])
+for _ in range(1000000):
+    e = r[0] * r[0] * r[0] + r[1] * r[1] * r[1] + r[2] * r[2] * r[2]
 print(time.perf_counter() - t)
