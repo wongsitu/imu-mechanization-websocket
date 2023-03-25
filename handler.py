@@ -23,7 +23,7 @@ def default(event, context):
     # Receive a batch of IMU/Magnetometer/GPS data and pass it to run_nav. Return the fuel consumption and emissions data
     # End the navigation with end_nav and return trip metrics
 
-    return {"statusCode": 200}
+    return {"statusCode": 200, 'data': 'hello'}
 
 
 def set_nav(displacement=None, is_supercharged=None, drag_coeff=None):
