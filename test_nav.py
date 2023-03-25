@@ -137,10 +137,10 @@ r = [np.random.rand() for _ in range(3)]
 
 t = time.perf_counter()
 for _ in range(1000000):
-    e = r[0] ** 3 + r[1] ** 3 + r[2] ** 3
+    e = r[0] ** 2 + r[1] ** 2 + r[2] ** 2
 print(time.perf_counter() - t)
 
 t = time.perf_counter()
 for _ in range(1000000):
-    e = r[0] * r[0] * r[0] + r[1] * r[1] * r[1] + r[2] * r[2] * r[2]
+    e = r[0] * r[0] + r[1] * r[1] + r[2] * r[2]
 print(time.perf_counter() - t)

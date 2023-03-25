@@ -291,10 +291,10 @@ class Nav:
 
         Args:
             timestamp: float
-            accel: np.ndarray of shape (3, 1) - IMU acceleration in m/s**2 including gravity
-            accel_no_g: np.ndarray of shape (3, 1) - IMU acceleration in m/s**2 excluding gravity
-            gyro: np.ndarray of shape (3, 1) - IMU angular velocity in rad/s
-            mag: np.ndarray of shape (3, 1) - Magnetic field in nT
+            accel: np.ndarray of shape (3,) - IMU acceleration in m/s**2 including gravity
+            accel_no_g: np.ndarray of shape (3,) - IMU acceleration in m/s**2 excluding gravity
+            gyro: np.ndarray of shape (3,) - IMU angular velocity in rad/s
+            mag: np.ndarray of shape (3,) - Magnetic field in nT
 
         Returns:
             None
