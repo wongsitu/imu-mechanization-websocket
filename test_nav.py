@@ -8,6 +8,7 @@ import pandas as pd
 import os
 import seaborn as sns
 import matplotlib.pyplot as plt
+import time
 
 datafile = '../fuellytics_test/data/from_bragg'
 
@@ -51,7 +52,6 @@ def run_nav(nav, data_batch):
         acc_nog = np.array([ax_nog * GRAVITY, ay_nog * GRAVITY, az_nog * GRAVITY])
         gyr = np.array([gx, gy, gz])
         mag = np.array([mx, my, mz])
-
         nav.process_imu_update(timestamp, acc, acc_nog, gyr, mag)
         if lat is not None:
             nav.process_gps_update(timestamp, lat, long, alt, heading, speed)
@@ -62,7 +62,6 @@ batch = []
 gps_index = 1
 v = []
 a = []
-time = []
 
 fuel, co2, co, nox, particulate, hc = [], [], [], [], [], []
 tfuel, tco2, tco, tnox, tparticulate, thc = [], [], [], [], [], []
@@ -130,8 +129,6 @@ sns.lineplot(y=a[:, 2], x=timestamps / 60, label='az')
 
 plt.show()
 
-
-import time
 
 r = [np.random.rand() for _ in range(3)]
 
