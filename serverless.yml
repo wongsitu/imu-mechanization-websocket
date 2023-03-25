@@ -13,21 +13,21 @@ functions:
       - websocket:
           route: $connect
           authorizer:
-            arn: arn:aws:lambda:us-east-1:028933020796:function:imu-mechanization-websocket-dev-connect
+            arn: arn:aws:execute-api:us-east-1:028933020796:2m72fvzj25/*/$connect
   disconnect:
     handler: handler.disconnect
     events:
       - websocket:
           route: $disconnect
           authorizer:
-            arn: arn:aws:lambda:us-east-1:028933020796:function:imu-mechanization-websocket-dev-disconnect
+            arn: arn:aws:execute-api:us-east-1:028933020796:2m72fvzj25/*/$disconnect
   default:
     handler: handler.default
     events:
       - websocket:
           route: $default
           authorizer:
-            arn: arn:aws:lambda:us-east-1:028933020796:function:imu-mechanization-websocket-dev-default
+            arn: arn:aws:execute-api:us-east-1:028933020796:2m72fvzj25/*/$default
 package:
   exclude:
     - node_modules/**
