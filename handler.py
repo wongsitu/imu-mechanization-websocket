@@ -7,19 +7,19 @@ import json
 # GRAVITY = 9.80665  # m / s ** 2
 
 def connect(event, context):
-    connection_id = event['requestContext']['connectionId']
-    print(f"Connection established with ID {connection_id}")
+    # connection_id = event['requestContext']['connectionId']
+    print(f"Connection established with ID 12313")
     return {"statusCode": 200}
 
 def disconnect(event, context):
-    connection_id = event['requestContext']['connectionId']
-    print(f"Connection closed with ID {connection_id}")
+    # connection_id = event['requestContext']['connectionId']
+    print(f"Connection closed with ID 12312")
     return {"statusCode": 200}
 
 def default(event, context):
-    connection_id = event['requestContext']['connectionId']
-    message = json.loads(event['body'])['message']
-    print(f"Received message from {connection_id}: {message}")
+    # connection_id = event['requestContext']['connectionId']
+    # message = json.loads(event['body'])['message']
+    print(f"Received message from")
     return {"statusCode": 200, "body": "Message received"}
 
 
