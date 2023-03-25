@@ -58,10 +58,10 @@ def run_nav(batch):
     for data in batch:
         t, ax, ay, az, ax_nog, ay_nog, az_nog, gx, gy, gz, mx, my, mz, lat, long, alt, heading, speed = data
 
-        acc = np.array([[ax], [ay], [az]]) * GRAVITY
-        acc_nog = np.array([[ax_nog], [ay_nog], [az_nog]]) * GRAVITY
-        gyr = np.array([[gx], [gy], [gz]])
-        mag = np.array([[mx], [my], [mz]])
+        acc = np.array([ax * GRAVITY, ay * GRAVITY, az * GRAVITY])
+        acc_nog = np.array([ax_nog * GRAVITY, ay_nog * GRAVITY, az_nog * GRAVITY])
+        gyr = np.array([gx, gy, gz])
+        mag = np.array([mx, my, mz])
 
         nav.process_imu_update(t, acc, acc_nog, gyr, mag)
         if lat is not None:

@@ -8,7 +8,7 @@ from geopy.distance import geodesic
 
 from livefilter import LiveSosFilter, LiveMeanFilter, VectorizedLiveOneSectionSosFilter
 from pyCRGI.pure import get_value
-from madgwick.madgwick import updateMARGFast
+from madgwick.madgwickFast import updateMARGFast
 
 
 GRAVITY = 9.80665  # m / s ** 2
@@ -299,7 +299,7 @@ class Nav:
             None
         '''
 
-        ################## UPDATE THIS DEPENDING ON TIME UNITS ##############################################
+        ################################### UPDATE THIS DEPENDING ON TIME UNITS ###################################
         if self.t0 is None:
             self.t0 = timestamp
 
@@ -539,7 +539,7 @@ class Nav:
         Compute aggregate metrics about the current trip
 
         Returns:
-            tuple[float] - total distance travelled in meters, average speed in m / s, and elapsed time in s
+            tuple[float] - total distance travelled in meters, average speed in m / s, and elapsed time in seconds
         '''
 
         ################################### UPDATE THIS DEPENDING ON TIME UNITS ###################################

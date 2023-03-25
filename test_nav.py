@@ -18,7 +18,7 @@ mag = pd.read_csv(os.path.join(datafile, 'Magnetometer.csv'))
 gps = pd.read_csv(os.path.join(datafile, 'Location.csv'))
 
 start = 0
-min_len = min(len(acc), len(acc_nog), len(gyr), len(mag), start + 5000000)
+min_len = min(len(acc), len(acc_nog), len(gyr), len(mag), start + 10000000)
 timestamps = acc.seconds_elapsed.to_numpy()[start:min_len]
 acc = acc[['x', 'y', 'z']].to_numpy()[start:min_len]
 acc_nog = acc_nog[['x', 'y', 'z']].to_numpy()[start:min_len]
@@ -47,8 +47,8 @@ def run_nav(nav, data_batch):
     for data in data_batch:
         timestamp, ax, ay, az, ax_nog, ay_nog, az_nog, gx, gy, gz, mx, my, mz, lat, long, alt, heading, speed = data
 
-        acc = np.array([ax, ay, az]) * GRAVITY
-        acc_nog = np.array([ax_nog, ay_nog, az_nog]) * GRAVITY
+        acc = np.array([ax * GRAVITY, ay * GRAVITY, az * GRAVITY])
+        acc_nog = np.array([ax_nog * GRAVITY, ay_nog * GRAVITY, az_nog * GRAVITY])
         gyr = np.array([gx, gy, gz])
         mag = np.array([mx, my, mz])
 
@@ -115,16 +115,15 @@ import time
 
 a = 15.3458
 b = 0.3463256
+c = 29.38475
+d = 93.2845
 
 t = time.perf_counter()
 for _ in range(100000):
-    c = a * b
-    d = a * b
+    e = np.array([a, b, c]) * d
 print(time.perf_counter() - t)
 
 t = time.perf_counter()
 for _ in range(100000):
-    ab = a * b
-    c = ab
-    d = ab
+    e = np.array([a * d, b * d, c * d])
 print(time.perf_counter() - t)
