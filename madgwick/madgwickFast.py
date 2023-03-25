@@ -66,14 +66,13 @@ def updateIMUFast(
     qDot = 0.5 * q_prod(q, [0, *gyr])  # (eq. 12)
 
     a = acc / norm3(acc)
-    q /= norm4(q)
-    _, qx, qy, qz = q
-    qw2, qx2, qy2, qz2 = 2 * q
+    qw, qx, qy, qz = q / norm4(q)
+    qw2, qx2, qy2, qz2 = 2 * qw, 2 * qx, 2 * qy, 2 * qz
     # Gradient objective function (eq. 25) and Jacobian (eq. 26)
     f = np.array(
         [
-            (qx2 * qz - qw2 * qy) - a[0],
-            (qw2 * qx + qy2 * qz) - a[1],
+            qx2 * qz - qw2 * qy - a[0],
+            qw2 * qx + qy2 * qz - a[1],
             2.0 * (0.5 - qx**2 - qy**2) - a[2],
         ]
     )  # (eq. 25)
@@ -188,8 +187,7 @@ def updateMARGFast(
     qDot -= gain * gradient  # (eq. 33)
 
     q += qDot * dt  # (eq. 13)
-    q /= norm4(q)
-    return q
+    return q / norm4(q)
 
 
 def norm3(x):
