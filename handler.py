@@ -1,29 +1,44 @@
 import json
 import numpy as np
-
 from nav import Nav
 
 GRAVITY = 9.80665  # m / s ** 2
 
-
 def connect(event, context):
-    connection_id = event['requestContext']['connectionId']
-    print(f"New connection: {connection_id}")
+    # connection_id = event['requestContext']['connectionId']
+    print(f"Connection established with ID 12313")
     return {"statusCode": 200}
 
+def disconnect(event, context):
+    # connection_id = event['requestContext']['connectionId']
+    print(f"Connection closed with ID 12312")
+    return {"statusCode": 200}
 
 def default(event, context):
-    connection_id = event['requestContext']['connectionId']
-    body = json.loads(event['body'])
-    message = body['message']
-    print(f"Received message: {message} from {connection_id}")
+    # connection_id = event['requestContext']['connectionId']
+    # message = json.loads(event['body'])['message']
+    print(f"Received message from")
+    return {"statusCode": 200, "body": "Message received"}
 
-    # Receive a message to start navigation -> call set_nav
-    # Set vehicle paramters with set_params (if not already set with set_nav)
-    # Receive a batch of IMU/Magnetometer/GPS data and pass it to run_nav. Return the fuel consumption and emissions data
-    # End the navigation with end_nav and return trip metrics
 
-    return {"statusCode": 200, 'data': 'hello'}
+# def connect(event, context):
+#     connection_id = event['requestContext']['connectionId']
+#     print(f"New connection: {connection_id}")
+#     return {"statusCode": 200}
+
+
+# def default(event, context):
+#     connection_id = event['requestContext']['connectionId']
+#     body = json.loads(event['body'])
+#     message = body['message']
+#     print(f"Received message: {message} from {connection_id}")
+
+#     # Receive a message to start navigation -> call set_nav
+#     # Set vehicle paramters with set_params (if not already set with set_nav)
+#     # Receive a batch of IMU/Magnetometer/GPS data and pass it to run_nav. Return the fuel consumption and emissions data
+#     # End the navigation with end_nav and return trip metrics
+
+#     return {"statusCode": 200}
 
 
 def set_nav(displacement=None, is_supercharged=None, drag_coeff=None):
