@@ -5,23 +5,30 @@ frameworkVersion: '3'
 provider:
   name: aws
   runtime: python3.8
+  account: ${env:AWS_ACCOUNT_ID}
+  region: "us-east-1"
+
+  websocketApiName: my-websocket-api
+  stage: ${opt:stage, 'dev'}
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "execute-api:ManageConnections"
+      Resource:
+        - "arn:aws:execute-api:${self:provider.region}:${self:provider.account}:*/*/POST/@connections/*"
 
 functions:
-  connect:
-    handler: handler.connect
+  connectionManager:
+    handler: handler.connection_manager
     events:
       - websocket:
           route: $connect
-  disconnect:
-    handler: handler.disconnect
-    events:
       - websocket:
           route: $disconnect
-  default:
-    handler: handler.default
-    events:
       - websocket:
           route: $default
+
 package:
   exclude:
     - node_modules/**
