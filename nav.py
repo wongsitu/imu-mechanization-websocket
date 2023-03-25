@@ -23,7 +23,7 @@ EMISSIONS_TO_NOX = 0.021  # proportion of nitrous oxides produced
 EMISSIONS_TO_PARTICULATE = 0.0005  # proportion of particulate matter produced
 EMISSIONS_TO_HC = 0.019  # proportion of unburned hydrocarbons produced
 
-# Data obtained from https://www.mdpi.com/2076-3417/9/7/1369, tables 5, 6
+# Data obtained from https://doi.org/10.3390/en6010117, tables 5, 6
 REGRESSION_COEFFICIENTS = (
     (0.81, 4.82),
     (0.72, 4.97),
@@ -214,10 +214,10 @@ class Nav:
 
         Args:
             q: np.ndarray - quaternion of shape (4,)
-            v: np.ndarray - vector of shape (3, 1)
+            v: np.ndarray - vector of shape (3,)
 
         Returns:
-            np.ndarray - rotated vector of shape (3, 1)
+            np.ndarray - rotated vector of shape (3,)
         '''
 
         q0, q1, q2, q3 = q
@@ -227,15 +227,11 @@ class Nav:
         b = q3 * q3 - q0 * q0 - q1 * q1 - q2 * q2
         c = 2.0 * q3
 
-        qxv0 = q1 * v2 - q2 * v1
-        qxv1 = q2 * v0 - q0 * v2
-        qxv2 = q0 * v1 - q1 * v0
-
         return np.array(
             [
-                a * q0 + b * v0 + c * qxv0,
-                a * q1 + b * v1 + c * qxv1,
-                a * q2 + b * v2 + c * qxv2,
+                a * q0 + b * v0 + c * (q1 * v2 - q2 * v1),
+                a * q1 + b * v1 + c * (q2 * v0 - q0 * v2),
+                a * q2 + b * v2 + c * (q0 * v1 - q1 * v0),
             ]
         )
 
@@ -295,10 +291,10 @@ class Nav:
 
         Args:
             timestamp: float
-            accel: np.ndarray of shape (3, 1) - IMU acceleration in m/s**2 including gravity
-            accel_no_g: np.ndarray of shape (3, 1) - IMU acceleration in m/s**2 excluding gravity
-            gyro: np.ndarray of shape (3, 1) - IMU angular velocity in rad/s
-            mag: np.ndarray of shape (3, 1) - Magnetic field in nT
+            accel: np.ndarray of shape (3,) - IMU acceleration in m/s**2 including gravity
+            accel_no_g: np.ndarray of shape (3,) - IMU acceleration in m/s**2 excluding gravity
+            gyro: np.ndarray of shape (3,) - IMU angular velocity in rad/s
+            mag: np.ndarray of shape (3,) - Magnetic field in nT
 
         Returns:
             None
@@ -319,7 +315,7 @@ class Nav:
 
         # Smooth the incomming accelerometer and gyro measurements
         # accel = self.accel_filter.process(accel)
-        # accel_no_g = self.accel_no_g_filter.process(accel_no_g)
+        accel_no_g = self.accel_no_g_filter.process(accel_no_g)
         # gyro = self.gyro_filter.process(gyro)
         self.latest_raw_imu = [accel, gyro, mag]
 
@@ -510,7 +506,7 @@ class Nav:
         # Get the vehicle speed and regression parameters
         speed = sqrt(self.v[1] ** 2 + self.v[2] ** 2)
         a, b = self._get_fc_params(speed, self.edi)
-        v_norm = sqrt(self.v[0] ** 2 + speed**2)
+        v_norm = sqrt(self.v[0] ** 2 + speed * speed)
 
         # Compute vehicle specific power in m ** 2 / s ** 3
         vsp = 1.1 * (self.v * self.a).sum() + GRAVITY * self.v[2] + self.drag_coeff * v_norm**3 + 0.132 * v_norm
@@ -529,13 +525,14 @@ class Nav:
         Returns:
             dict: Current and total fuel consumption and emissions information.
                 Keys indicate the type of emission.
-                Values are tuples of size (2,).  The first element is the current usage in mL/s for 
-                fuel and 
+                Values are tuples of size (2,).  The first element is the current usage in mL / s
+                for fuel and g / s for emissions.  Total consumption in is L for fuel and kg for
+                emissions.
         '''
 
         if self.edi is None:
             print('WARNING: Vehicle parameters not set. Call set_vehicle_params to set.')
-            return 0, 0
+            return {}
 
         emissions_current = GAS_TO_EMISSIONS * self.current_fc
         emissions_total = GAS_TO_EMISSIONS * self.total_fc
