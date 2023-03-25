@@ -529,13 +529,14 @@ class Nav:
         Returns:
             dict: Current and total fuel consumption and emissions information.
                 Keys indicate the type of emission.
-                Values are tuples of size (2,).  The first element is the current usage in mL/s for 
-                fuel and 
+                Values are tuples of size (2,).  The first element is the current usage in mL / s
+                for fuel and g / s for emissions.  Total consumption in is L for fuel and kg for
+                emissions.
         '''
 
         if self.edi is None:
             print('WARNING: Vehicle parameters not set. Call set_vehicle_params to set.')
-            return 0, 0
+            return {}
 
         emissions_current = GAS_TO_EMISSIONS * self.current_fc
         emissions_total = GAS_TO_EMISSIONS * self.total_fc

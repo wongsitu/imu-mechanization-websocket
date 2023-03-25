@@ -18,7 +18,7 @@ mag = pd.read_csv(os.path.join(datafile, 'Magnetometer.csv'))
 gps = pd.read_csv(os.path.join(datafile, 'Location.csv'))
 
 start = 0
-min_len = min(len(acc), len(acc_nog), len(gyr), len(mag), start + 10000000)
+min_len = min(len(acc), len(acc_nog), len(gyr), len(mag), start + 10000)
 timestamps = acc.seconds_elapsed.to_numpy()[start:min_len]
 acc = acc[['x', 'y', 'z']].to_numpy()[start:min_len]
 acc_nog = acc_nog[['x', 'y', 'z']].to_numpy()[start:min_len]
@@ -60,11 +60,12 @@ def run_nav(nav, data_batch):
 ################# SYSTEM TEST ########################################################################
 batch = []
 gps_index = 1
-fc = []
 v = []
 a = []
 time = []
 
+fuel, co2, co, nox, particulate, hc = [], [], [], [], [], []
+tfuel, tco2, tco, tnox, tparticulate, thc = [], [], [], [], [], []
 for i, t in enumerate(timestamps):
     if i % 1000 == 0:
         print(i / len(timestamps))
@@ -80,21 +81,40 @@ for i, t in enumerate(timestamps):
 
     run_nav(nav, [data])
 
-    # if have_gps:
-    fc.append(nav.get_fuel_and_emissions())
+    emissions = nav.get_fuel_and_emissions()
+    fuel.append(emissions['fuel'][0])
+    tfuel.append(emissions['fuel'][1])
+    co2.append(emissions['CO2'][0])
+    tco2.append(emissions['CO2'][1])
+    co.append(emissions['CO'][0])
+    tco.append(emissions['CO'][1])
+    nox.append(emissions['NOx'][0])
+    tnox.append(emissions['NOx'][1])
+    particulate.append(emissions['particulate'][0])
+    tparticulate.append(emissions['particulate'][1])
+    hc.append(emissions['HC'][0])
+    thc.append(emissions['HC'][1])
+
     vel_acc = nav.get_motion()
-    v.append(vel_acc[0].flatten())
-    a.append(vel_acc[1].flatten())
+    v.append(vel_acc[0])
+    a.append(vel_acc[1])
 
 
 plt.figure()
-fc = np.array(fc)
-sns.lineplot(y=fc[:, 0], x=timestamps / 60, label='fc')
-sns.lineplot(y=fc[:, 1], x=timestamps / 60, label='emissions')
+sns.lineplot(y=np.array(fuel), x=timestamps / 60, label='fc')
+sns.lineplot(y=np.array(co2), x=timestamps / 60, label='co2')
+sns.lineplot(y=np.array(co), x=timestamps / 60, label='co')
+sns.lineplot(y=np.array(nox), x=timestamps / 60, label='nox')
+sns.lineplot(y=np.array(particulate), x=timestamps / 60, label='particulate')
+sns.lineplot(y=np.array(hc), x=timestamps / 60, label='hc')
 
 plt.figure()
-sns.lineplot(y=fc[:, 2], x=timestamps / 60, label='total fc')
-sns.lineplot(y=fc[:, 3], x=timestamps / 60, label='total emissions')
+sns.lineplot(y=np.array(tfuel), x=timestamps / 60, label='fc')
+sns.lineplot(y=np.array(tco2), x=timestamps / 60, label='co2')
+sns.lineplot(y=np.array(tco), x=timestamps / 60, label='co')
+sns.lineplot(y=np.array(tnox), x=timestamps / 60, label='nox')
+sns.lineplot(y=np.array(tparticulate), x=timestamps / 60, label='particulate')
+sns.lineplot(y=np.array(thc), x=timestamps / 60, label='hc')
 
 plt.figure()
 v = np.array(v)
