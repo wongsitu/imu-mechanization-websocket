@@ -13,7 +13,7 @@ from madgwick.madgwickFast import updateMARGFast
 
 GRAVITY = 9.80665  # m / s ** 2
 AIR_DENSITY = 1.225  # density at STP in kg / m ** 3
-DRAG_CONVERSION = 0.07803855  # frontal area in drag is in 0.84 ft ** 2 - this converts to m ** 2
+DRAG_CONVERSION = 0.07803855  # frontal area in drag is in units of 0.84 ft ** 2 - this converts to m ** 2
 DEFAULT_DRAG = AIR_DENSITY * 0.004834396004686504 * 0.5 * DRAG_CONVERSION  # Mean drag coefficient over all cars
 DEG_TO_RAD = pi / 180
 GAS_TO_EMISSIONS = 2.31  # 2.31 kg of CO2 produced for every litre of gasoline burned
@@ -46,7 +46,7 @@ REGRESSION_COEFFICIENTS = (
 
 class Nav:
     '''
-    Class to update navigation parameters from IMU, magnetometer, and gps measurements and compute fuel economy.
+    Class to update navigation parameters from IMU, magnetometer, and GPS measurements and compute fuel economy.
     '''
 
     def __init__(
@@ -67,7 +67,7 @@ class Nav:
         Args:
             smoothing_critical_freq: float - critical frequency of the butterworth filter applied to accel
                 measurements
-            vz_depth: int - number of previous gps iterations to consider when computing vertical velocity
+            vz_depth: int - number of previous GPS iterations to consider when computing vertical velocity
             period: float - IMU update period
             algo: str - AHRS algorithm. One of 'EKF', 'Madgwick'
             displacement: float | None - Engine displacement in L. Can be set later with set_vehicle_params
@@ -78,7 +78,7 @@ class Nav:
             smooth_fc: bool - whether or not to smooth the outgoing fuel consumption values
             fc_smoothing_critical_freq: float - critical frequency of the butterworth filter applied to fuel
                 consumption
-            imu_damping: float - factor to damp the imu measurements as gps are more trustworthy
+            imu_damping: float - factor to damp the IMU measurements as GPS are more trustworthy
             fc_reduction_factor: float - reduce emissions by this factor for accuracy
 
         Returns:
@@ -363,7 +363,7 @@ class Nav:
         self, timestamp: float, lat: float, long: float, alt: float, heading: float, speed: float
     ) -> None:
         '''
-        Process a measurement from the gps
+        Process a measurement from the GPS
 
         Args:
             timestamp: float - time in s
@@ -414,7 +414,7 @@ class Nav:
         if heading is not None:
             self.heading = heading
 
-        # Compute the vertical velocity and update the altitude and gps timestamp
+        # Compute the vertical velocity and update the altitude and GPS timestamp
         if alt is not None:
             if self.prev_alt is None and alt is not None:
                 v_z = 0
@@ -430,7 +430,7 @@ class Nav:
             self.v[0] = 0
             self.v[1] = speed
 
-        # Reset the local level frame velocity using the gps measurements
+        # Reset the local level frame velocity using the GPS measurements
         if alt is not None or speed is not None:
             self.v_llf = (self.R_l2v.T @ self.v.reshape((3, 1))).reshape(3)
 

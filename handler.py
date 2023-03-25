@@ -4,15 +4,18 @@ from nav import Nav
 
 GRAVITY = 9.80665  # m / s ** 2
 
+
 def connect(event, context):
     # connection_id = event['requestContext']['connectionId']
     print(f"Connection established with ID 12313")
     return {"statusCode": 200}
 
+
 def disconnect(event, context):
     # connection_id = event['requestContext']['connectionId']
     print(f"Connection closed with ID 12312")
     return {"statusCode": 200}
+
 
 def default(event, context):
     # connection_id = event['requestContext']['connectionId']
@@ -68,7 +71,7 @@ def set_params(displacement, is_supercharged, drag_coeff=None):
 def run_nav(batch):
     if 'nav' not in globals():
         print('WARNING: Navigation not initialized. Call set_nav to initialize.')
-        return 0, 0, 0, 0
+        return
 
     for data in batch:
         t, ax, ay, az, ax_nog, ay_nog, az_nog, gx, gy, gz, mx, my, mz, lat, long, alt, heading, speed = data
