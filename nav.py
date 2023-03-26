@@ -6,7 +6,7 @@ from scipy.signal import butter
 from ahrs.filters import EKF, Madgwick
 from geopy.distance import geodesic
 
-from livefilter import LiveSosFilter, LiveMeanFilter, VectorizedLiveOneSectionSosFilter
+from livefilter import PureLiveSosFilter, LiveMeanFilter, PureTripleLiveOneSectionSosFilter
 from pyCRGI.pure import get_value
 from madgwick.madgwickFast import updateMARGFast
 
@@ -94,10 +94,10 @@ class Nav:
         self.average_speed = LiveMeanFilter()
 
         # Initialize the filters for smoothing incomming accel and gyro data
-        sos = butter(2, smoothing_critical_freq, output='sos', fs=None, btype='lowpass')
-        # self.accel_filter = VectorizedLiveOneSectionSosFilter(sos, dim=3)
-        self.accel_no_g_filter = VectorizedLiveOneSectionSosFilter(sos, dim=3)
-        # self.gyro_filter = VectorizedLiveOneSectionSosFilter(sos, dim=3)
+        sos = butter(2, smoothing_critical_freq, output='sos', fs=None, btype='lowpass')[0]
+        # self.accel_filter = PureTripleLiveOneSectionSosFilter(sos)
+        self.accel_no_g_filter = PureTripleLiveOneSectionSosFilter(sos)
+        # self.gyro_filter = PureTripleLiveOneSectionSosFilter(sos)
 
         # Initialize time-related IMU parameters
         self.t0 = None
@@ -141,8 +141,8 @@ class Nav:
         # Update these every time we update the velocity
         self.current_fc = 0  # Current fuel consumption in mL / s
         self.total_fc = 0  # Total fuel consumption in L
-        sos = butter(2, fc_smoothing_critical_freq, output='sos', fs=None, btype='lowpass')
-        self.fc_filter = LiveSosFilter(sos) if smooth_fc else None
+        sos = butter(2, fc_smoothing_critical_freq, output='sos', fs=None, btype='lowpass')[0]
+        self.fc_filter = PureLiveSosFilter(sos) if smooth_fc else None
         self.imu_damping = imu_damping
         self.fc_reduction_factor = fc_reduction_factor
 
@@ -314,9 +314,9 @@ class Nav:
         self.prev_timestamp = timestamp
 
         # Smooth the incomming accelerometer and gyro measurements
-        # accel = self.accel_filter.process(accel)
-        accel_no_g = self.accel_no_g_filter.process(accel_no_g)
-        # gyro = self.gyro_filter.process(gyro)
+        # accel = np.array(self.accel_filter.process(accel))
+        accel_no_g = np.array(self.accel_no_g_filter.process(accel_no_g))
+        # gyro = np.array(self.gyro_filter.process(gyro))
         self.latest_raw_imu = [accel, gyro, mag]
 
         # If we have no reference field, we have no orientation
