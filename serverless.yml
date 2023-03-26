@@ -1,35 +1,25 @@
 service: imu-mechanization-websocket
 
-plugins:
-  - serverless-python-requirements
+frameworkVersion: '3'
 
 provider:
   name: aws
   runtime: python3.8
+  region: "us-east-1"
+
+  websocketApiName: my-websocket-api
   stage: ${opt:stage, 'dev'}
-  region: us-east-1
-  apiGateway:
-    websocketApiName: my-websocket-api
-    websocketApiRouteSelectionExpression: $request.body.action
-  websocketApiId:
-    Fn::ImportValue:
-      !Join ['-', ['my-websocket-api', '${self:provider.stage}', 'WebSocketApiId']]
+
   iamRoleStatements:
-    - Effect: Allow
+    - Effect: "Allow"
       Action:
-        - execute-api:ManageConnections
+        - "execute-api:ManageConnections"
       Resource:
-        - "arn:aws:execute-api:${self:provider.region}:${self:provider.account}:${self:provider.apiGateway.websocketApiId}/*/@connections/*"
-    - Effect: Allow
-      Action:
-        - logs:CreateLogGroup
-        - logs:CreateLogStream
-        - logs:PutLogEvents
-      Resource: "*"
+        - "arn:aws:execute-api:us-east-1:028933020796:*/*/POST/@connections/*"
 
 functions:
-  websocket:
-    handler: handler.websocket_handler
+  connectionManager:
+    handler: handler.connection_manager
     events:
       - websocket:
           route: $connect
@@ -37,30 +27,13 @@ functions:
           route: $disconnect
       - websocket:
           route: $default
-    # Define the list of external libraries here
-    pythonRequirements:
-      dockerizePip: non-linux
-      requirements:
-        - requests
-        - boto3
 
-resources:
-  Resources:
-    WebSocketAuthorizer:
-      Type: AWS::ApiGatewayV2::Authorizer
-      Properties:
-        ApiId: ${self:provider.apiGateway.websocketApiId}
-        AuthorizerType: REQUEST
-        IdentitySource: $request.header.Authorization
-        Name: my-websocket-authorizer
-        AuthorizerPayloadFormatVersion: '2.0'
-        AuthorizerResultTtlInSeconds: 300
-        # Define your authorizer function here
-        AuthorizerUri: arn:aws:apigateway:${self:provider.region}:lambda:path/2015-03-31/functions/${self:service}-${self:provider.stage}-authorizer:${self:provider.runtime}/invocations
-    WebSocketPermission:
-      Type: AWS::Lambda::Permission
-      Properties:
-        FunctionName: ${self:service}-${self:provider.stage}-websocket
-        Action: lambda:InvokeFunction
-        Principal: apigateway.amazonaws.com
-        SourceArn: "arn:aws:execute-api:${self:provider.region}:${self:provider.account}:${self:provider.apiGateway.websocketApiId}/*"
+package:
+  exclude:
+    - node_modules/**
+    - .venv/**
+plugins:
+  - serverless-python-requirements
+custom:
+  pythonRequirements:
+    zip: true

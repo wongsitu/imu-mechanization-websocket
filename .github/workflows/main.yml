@@ -1,41 +1,27 @@
-name: Deploy to AWS
+name: Deploy serverless
 
-on:
+on: 
   push:
     branches:
       - master
 
 jobs:
   deploy:
+    name: deploy
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        node-version: [14.x]
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
-
-    - name: Retrieve WebSocket API ID
-      uses: actions/aws/cli@v1
+        node-version: ${{ matrix.node-version }}
+    - name: serverless deploy
+      uses: serverless/github-action@master
       with:
-        args: |
-          export WEBSOCKET_API_ID=$(aws apigatewayv2 get-apis --query "Items[?Name=='${{ self:service.provider.apiGateway.websocketApiName }}'].ApiId" --output text)
-
-    - name: Install Serverless framework
-      run: npm install -g serverless
-
-    - name: Install dependencies
-      run: |
-        cd imu-mechanization-websocket
-        npm install
-
-    - name: Deploy service
-      run: |
-        cd imu-mechanization-websocket
-        serverless deploy --stage ${{ env.DEPLOY_ENV }}
-
+        args: deploy
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
