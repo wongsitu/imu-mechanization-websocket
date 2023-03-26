@@ -19,7 +19,7 @@ provider:
 
 functions:
   connectionManager:
-    handler: handler.connection_manager
+    handler: handler.websocket_handler
     events:
       - websocket:
           route: $connect
