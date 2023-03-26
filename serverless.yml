@@ -16,7 +16,7 @@ provider:
       Action:
         - "execute-api:ManageConnections"
       Resource:
-        - "arn:aws:execute-api:${self:provider.region}:${self:provider.account}:*/*/POST/@connections/*"
+        - "arn:aws:execute-api:us-east-1:028933020796:*/*/POST/@connections/*"
 
 functions:
   connectionManager:
