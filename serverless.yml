@@ -27,13 +27,14 @@ functions:
           route: $disconnect
       - websocket:
           route: $default
-
-package:
-  include:
-    - requirements.txt
-  exclude:
-    - node_modules/**
-    - .venv/**
+    package:
+      include:
+        - requirements.txt
+      exclude:
+        - node_modules/**
+        - .venv/**
+    plugins:
+      - serverless-python-requirements
 custom:
   pythonRequirements:
     zip: true
