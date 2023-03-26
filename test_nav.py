@@ -129,20 +129,3 @@ sns.lineplot(y=a[:, 1], x=timestamps / 60, label='ay')
 sns.lineplot(y=a[:, 2], x=timestamps / 60, label='az')
 
 plt.show()
-
-
-r = [np.random.rand() for _ in range(3)]
-a = [0, 0, 0]
-
-t = time.perf_counter()
-for _ in range(100000):
-    for x in range(3):
-        a[x] = r[x] + 2
-print(time.perf_counter() - t)
-
-t = time.perf_counter()
-for _ in range(100000):
-    a[0] = r[0] + 2
-    a[1] = r[1] + 2
-    a[2] = r[2] + 2
-print(time.perf_counter() - t)
