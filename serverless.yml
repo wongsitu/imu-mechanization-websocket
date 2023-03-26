@@ -5,7 +5,6 @@ frameworkVersion: '3'
 provider:
   name: aws
   runtime: python3.8
-  account: ${env:AWS_ACCOUNT_ID}
   region: "us-east-1"
 
   websocketApiName: my-websocket-api
