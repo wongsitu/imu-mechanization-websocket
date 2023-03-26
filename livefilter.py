@@ -45,7 +45,32 @@ class LiveSosFilter(LiveFilter):
             self.state[s, 0] = b1 * x - a1 * y + self.state[s, 1]
             self.state[s, 1] = b2 * x - a2 * y
             # x = y  # Set biquad output as input of next filter section.
+        return y
 
+
+class PureLiveSosFilter(LiveFilter):
+    '''
+    Live implementation of digital filter with second-order sections.
+    One section only.
+    '''
+
+    def __init__(self, sos: np.ndarray | list) -> None:
+        '''
+        Initialize live second-order sections filter
+        '''
+        self.sos = sos
+        self.state = [0, 0]
+
+    def _process(self, x: float) -> float:
+        '''
+        Filter incoming data with cascaded second-order sections
+        '''
+        b0, b1, b2, _, a1, a2 = self.sos
+
+        # Compute difference equations of transposed direct form II
+        y = b0 * x + self.state[0]
+        self.state[0] = b1 * x - a1 * y + self.state[1]
+        self.state[1] = b2 * x - a2 * y
         return y
 
 
@@ -81,6 +106,47 @@ class VectorizedLiveOneSectionSosFilter:
         self.state[:, 1] = b2 * x - a2 * y
 
         return y
+
+
+class PureTripleLiveOneSectionSosFilter:
+    '''
+    Live implementation of digital filter with second-order sections, but vectorized and supports only one section
+    '''
+
+    def __init__(self, sos: np.ndarray) -> None:
+        '''
+        Initialize live second-order sections filter
+
+        Args:
+            sos: np.ndarray
+        '''
+
+        self.sos = sos
+        self.s0 = [0, 0]
+        self.s1 = [0, 0]
+        self.s2 = [0, 0]
+
+    def process(self, x: np.ndarray) -> float:
+        '''
+        Filter incoming data with cascaded second-order sections
+
+        Args:
+            x: np.ndarray of shape (dim, 1)
+        '''
+
+        b0, b1, b2, _, a1, a2 = self.sos
+
+        y0 = b0 * x[0] + self.s0[0]
+        y1 = b0 * x[1] + self.s1[0]
+        y2 = b0 * x[2] + self.s2[0]
+        self.s0[0] = b1 * x[0] - a1 * y0 + self.s0[1]
+        self.s1[0] = b1 * x[1] - a1 * y1 + self.s1[1]
+        self.s2[0] = b1 * x[2] - a1 * y2 + self.s2[1]
+        self.s0[1] = b2 * x[0] - a2 * y0
+        self.s1[1] = b2 * x[1] - a2 * y1
+        self.s2[1] = b2 * x[2] - a2 * y2
+
+        return [y0, y1, y2]
 
 
 class MultidimensionalLiveSosFilter:

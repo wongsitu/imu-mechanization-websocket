@@ -65,6 +65,7 @@ a = []
 
 fuel, co2, co, nox, particulate, hc = [], [], [], [], [], []
 tfuel, tco2, tco, tnox, tparticulate, thc = [], [], [], [], [], []
+t0 = time.perf_counter()
 for i, t in enumerate(timestamps):
     if i % 1000 == 0:
         print(i / len(timestamps))
@@ -97,6 +98,7 @@ for i, t in enumerate(timestamps):
     vel_acc = nav.get_motion()
     v.append(vel_acc[0])
     a.append(vel_acc[1])
+print('EXEC TIME:', time.perf_counter() - t0)
 
 
 plt.figure()
