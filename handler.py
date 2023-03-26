@@ -76,7 +76,8 @@ def run_nav(batch):
         t, ax, ay, az, ax_nog, ay_nog, az_nog, gx, gy, gz, mx, my, mz, lat, long, alt, heading, speed = data
 
         acc = np.array([ax * GRAVITY, ay * GRAVITY, az * GRAVITY])
-        acc_nog = np.array([ax_nog * GRAVITY, ay_nog * GRAVITY, az_nog * GRAVITY])
+        acc_nog = np.array(
+            [ax_nog * GRAVITY, ay_nog * GRAVITY, az_nog * GRAVITY])
         gyr = np.array([gx, gy, gz])
         mag = np.array([mx, my, mz])
 
