@@ -13,24 +13,6 @@ provider:
       Resource:
         - "arn:aws:execute-api:us-east-1:028933020796:*/*/POST/@connections/*"
 
-
-plugins:
-  - serverless-python-requirements
-
-custom:
-  pythonRequirements:
-    zip: true
-
-package:
-  exclude:
-    - '**/*'
-  include:
-    - '*.py'
-    - 'numpy'
-    - 'scipy'
-    - 'AHRS'
-    - 'geopy'
-
 functions:
   connectionManager:
     handler: handler.websocket_handler
@@ -41,3 +23,15 @@ functions:
           route: $disconnect
       - websocket:
           route: $default
+
+package:
+  exclude:
+    - '**/*'
+  include:
+    - 'numpy'
+    - 'scipy'
+    - 'AHRS'
+    - 'geopy'
+custom:
+  pythonRequirements:
+    zip: true
