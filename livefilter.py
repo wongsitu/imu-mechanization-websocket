@@ -2,25 +2,25 @@ import numpy as np
 from collections import deque
 
 
-class LiveFilter:
-    '''
-    Base class for live filters
-    '''
+# class LiveFilter:
+#     '''
+#     Base class for live filters
+#     '''
 
-    def process(self, x: float) -> np.ndarray:
-        # Do not process NaNs
-        if np.isnan(x):
-            return x
-        return self._process(x)
+#     def process(self, x: float) -> np.ndarray:
+#         # Do not process NaNs
+#         if np.isnan(x):
+#             return x
+#         return self._process(x)
 
-    def __call__(self, x: float) -> np.ndarray:
-        return self.process(x)
+#     def __call__(self, x: float) -> np.ndarray:
+#         return self.process(x)
 
-    def _process(self, x):
-        raise NotImplementedError("Derived class must implement _process")
+#     def _process(self, x):
+#         raise NotImplementedError("Derived class must implement _process")
 
 
-class LiveSosFilter(LiveFilter):
+class LiveSosFilter:  # (LiveFilter):
     '''
     Live implementation of digital filter with second-order sections
     '''
@@ -33,7 +33,7 @@ class LiveSosFilter(LiveFilter):
         self.n_sections = sos.shape[0]
         self.state = np.zeros((self.n_sections, 2))
 
-    def _process(self, x: float) -> float:
+    def process(self, x: float) -> float:
         '''
         Filter incoming data with cascaded second-order sections
         '''
@@ -48,20 +48,20 @@ class LiveSosFilter(LiveFilter):
         return y
 
 
-class PureLiveSosFilter(LiveFilter):
+class PureLiveSosFilter:  # (LiveFilter):
     '''
     Live implementation of digital filter with second-order sections.
     One section only.
     '''
 
-    def __init__(self, sos: np.ndarray | list) -> None:
+    def __init__(self, sos: list) -> None:
         '''
         Initialize live second-order sections filter
         '''
         self.sos = sos
         self.state = [0, 0]
 
-    def _process(self, x: float) -> float:
+    def process(self, x: float) -> float:
         '''
         Filter incoming data with cascaded second-order sections
         '''
@@ -113,12 +113,12 @@ class PureTripleLiveOneSectionSosFilter:
     Live implementation of digital filter with second-order sections, but vectorized and supports only one section
     '''
 
-    def __init__(self, sos: np.ndarray) -> None:
+    def __init__(self, sos: list | np.ndarray) -> None:
         '''
         Initialize live second-order sections filter
 
         Args:
-            sos: np.ndarray
+            sos: list | np.ndarray
         '''
 
         self.sos = sos
@@ -126,12 +126,12 @@ class PureTripleLiveOneSectionSosFilter:
         self.s1 = [0, 0]
         self.s2 = [0, 0]
 
-    def process(self, x: np.ndarray) -> float:
+    def process(self, x: list | np.ndarray) -> float:
         '''
         Filter incoming data with cascaded second-order sections
 
         Args:
-            x: np.ndarray of shape (dim, 1)
+            x: list | np.ndarray of length 3
         '''
 
         b0, b1, b2, _, a1, a2 = self.sos
@@ -181,7 +181,7 @@ class MultidimensionalLiveSosFilter:
         return np.array([self.filters[i].process(x[i]) for i in range(self.len)]).reshape(self.shape)
 
 
-class LiveMeanFilter(LiveFilter):
+class LiveMeanFilter:  # (LiveFilter):
     '''
     Efficient moving average filter
     '''
@@ -199,7 +199,7 @@ class LiveMeanFilter(LiveFilter):
         self.k = 0
         self.mean = 0
 
-    def _process(self, x: float) -> float:
+    def process(self, x: float) -> float:
         '''
         Update the simple moving average
         '''

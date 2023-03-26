@@ -73,10 +73,8 @@ for i, t in enumerate(timestamps):
 
     data = [t, *acc[i], *acc_nog[i], *gyr[i], *mag[i], None, None, None, None, None]
 
-    have_gps = False
     if gps_index < len(gps) and t >= gps[gps_index, 0]:
         data[-5:] = [*gps[gps_index][1:]]
-        have_gps = True
         gps_index += 1
 
     run_nav(nav, [data])
@@ -98,7 +96,8 @@ for i, t in enumerate(timestamps):
     vel_acc = nav.get_motion()
     v.append(vel_acc[0])
     a.append(vel_acc[1])
-print('EXEC TIME:', time.perf_counter() - t0)
+t1 = time.perf_counter()
+print('EXEC TIME:', t1 - t0, (t1 - t0) / len(timestamps))
 
 
 plt.figure()
@@ -130,16 +129,3 @@ sns.lineplot(y=a[:, 1], x=timestamps / 60, label='ay')
 sns.lineplot(y=a[:, 2], x=timestamps / 60, label='az')
 
 plt.show()
-
-
-r = [np.random.rand() for _ in range(3)]
-
-t = time.perf_counter()
-for _ in range(1000000):
-    e = r[0] ** 2 + r[1] ** 2 + r[2] ** 2
-print(time.perf_counter() - t)
-
-t = time.perf_counter()
-for _ in range(1000000):
-    e = r[0] * r[0] + r[1] * r[1] + r[2] * r[2]
-print(time.perf_counter() - t)
