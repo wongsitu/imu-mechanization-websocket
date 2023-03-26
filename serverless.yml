@@ -1,7 +1,5 @@
 service: imu-mechanization-websocket
 
-frameworkVersion: '3'
-
 provider:
   name: aws
   runtime: python3.8
@@ -17,6 +15,25 @@ provider:
       Resource:
         - "arn:aws:execute-api:us-east-1:028933020796:*/*/POST/@connections/*"
 
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+    zip: true
+
+package:
+  exclude:
+    - '**/*'
+  include:
+    - '*.py'
+    - 'numpy'
+    - 'scipy'
+    - 'AHRS'
+    - 'geopy'
+
 functions:
   connectionManager:
     handler: handler.websocket_handler
@@ -27,14 +44,3 @@ functions:
           route: $disconnect
       - websocket:
           route: $default
-    package:
-      include:
-        - requirements.txt
-      exclude:
-        - node_modules/**
-        - .venv/**
-    plugins:
-      - serverless-python-requirements
-custom:
-  pythonRequirements:
-    zip: true
