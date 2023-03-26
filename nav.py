@@ -240,14 +240,15 @@ class Nav:
         Returns:
             index: int
         '''
-        if displacement < 1.6:
-            edi = 0
-        elif displacement < 2.5:
-            edi = 1
-        elif displacement < 4:
-            edi = 2
-        else:
-            edi = 3
+        match displacement:
+            case _ if displacement < 1.6:
+                edi = 0
+            case _ if displacement < 2.5:
+                edi = 1
+            case _ if displacement < 4:
+                edi = 2
+            case _:
+                edi = 3
         if is_supercharged and edi != 3:
             edi += 1
         return edi
