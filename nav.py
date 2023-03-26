@@ -80,11 +80,7 @@ class Nav:
                 consumption
             imu_damping: float - factor to damp the IMU measurements as GPS are more trustworthy
             fc_reduction_factor: float - reduce emissions by this factor for accuracy
-
-        Returns:
-            None
         '''
-
         # Initialize navigation parameters
         self.v = np.zeros(3)  # Velocity in the vehicle frame
         self.a = np.zeros(3)  # Acceleration in the vehicle frame (sans gravity)
@@ -160,7 +156,6 @@ class Nav:
         Returns:
             reference field as a np.ndarray if return_inclination = False else magnetic dip as a float
         '''
-
         # Compute the year
         now = datetime.now().timetuple()
         year = now.tm_year + now.tm_yday / (365 if now.tm_year % 4 != 0 else 366)
@@ -187,7 +182,6 @@ class Nav:
         Returns:
             np.ndarray of shape (3, 3)
         '''
-
         q1, q2, q3, q4 = q
         qq1, qq2, qq3, qq4 = q * q
         q1q2 = q1 * q2
@@ -219,7 +213,6 @@ class Nav:
         Returns:
             np.ndarray - rotated vector of shape (3,)
         '''
-
         q0, q1, q2, q3 = q
         v0, v1, v2 = v
 
@@ -247,7 +240,6 @@ class Nav:
         Returns:
             index: int
         '''
-
         if displacement < 1.6:
             edi = 0
         elif displacement < 2.5:
@@ -272,7 +264,6 @@ class Nav:
         Returns:
             tuple[float] - fuel consumption regression coefficients
         '''
-
         if speed < 5.556:  # 20 km/h
             speed_index = 0
         elif speed < 11.11:  # 40 km/h
@@ -295,11 +286,7 @@ class Nav:
             accel_no_g: np.ndarray of shape (3,) - IMU acceleration in m/s**2 excluding gravity
             gyro: np.ndarray of shape (3,) - IMU angular velocity in rad/s
             mag: np.ndarray of shape (3,) - Magnetic field in nT
-
-        Returns:
-            None
         '''
-
         ################################### UPDATE THIS DEPENDING ON TIME UNITS ###################################
         if self.t0 is None:
             self.t0 = timestamp
@@ -376,7 +363,6 @@ class Nav:
         Returns:
             None
         '''
-
         # Return if we can't compute rotation matrices
         if self.latest_raw_imu is None:
             return
@@ -458,18 +444,14 @@ class Nav:
         reset: bool = False,
     ) -> None:
         '''
-        Set the vehicle parameters.  This must be done before calling get_fuel_and_emissions.
+        Set the vehicle parameters.  This must be done before calling get_fuel or get_emissions.
 
         Args:
             displacement: float | None - engine displacement
             is_supercharged: float | None - must be supplied at the same time as displacement
             drag_coeff: float | None - drag coefficient times frontal area divided by vehicle mass
             reset: bool - must be set to true to reset parameters that have already been set
-
-        Returns:
-            None
         '''
-
         param_warning = lambda: print(
             'WARNING: Vehicle parameters already set. Use reset=True to reset the parameters.'
         )
@@ -498,11 +480,7 @@ class Nav:
 
         Args:
             timestep: float - the current timestep
-
-        Returns:
-            None:
         '''
-
         # Get the vehicle speed and regression parameters
         speed = sqrt(self.v[1] ** 2 + self.v[2] ** 2)
         a, b = self._get_fc_params(speed, self.edi)
@@ -532,12 +510,11 @@ class Nav:
         Return the best estimates of the current and cumulative emissions
 
         Returns:
-            dict: Current and total fuel consumption and emissions information.
+            dict: Current and total emissions information.
                 Keys indicate the type of emission.
                 Values are tuples of size (2,).  The first element is the current usage in
                 g / s.  Total consumption is in kg.
         '''
-
         if self.edi is None:
             print('WARNING: Vehicle parameters not set. Call set_vehicle_params to set.')
             return {}
@@ -575,7 +552,6 @@ class Nav:
         Returns:
             tuple[float] - total distance travelled in meters, average speed in m / s, and elapsed time in seconds
         '''
-
         ################################### UPDATE THIS DEPENDING ON TIME UNITS ###################################
         if self.prev_timestamp is None:
             elapsed_time = 0
