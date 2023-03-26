@@ -518,16 +518,24 @@ class Nav:
             self.current_fc = self.fc_filter.process(self.current_fc)
         self.total_fc += self.current_fc * timestep * 0.001  # Convert mL to L
 
-    def get_fuel_and_emissions(self) -> dict:
+    def get_fuel(self) -> tuple[float]:
         '''
-        Return the best estimates of the current and cumulative fuel consumption and emissions
+        Return the best estimates of the current and total fuel consumption
+
+        Returns:
+            tuple[float] - Current fuel usage in mL / s and total fuel usage in L
+        '''
+        return self.current_fc, self.total_fc
+
+    def get_emissions(self) -> dict:
+        '''
+        Return the best estimates of the current and cumulative emissions
 
         Returns:
             dict: Current and total fuel consumption and emissions information.
                 Keys indicate the type of emission.
-                Values are tuples of size (2,).  The first element is the current usage in mL / s
-                for fuel and g / s for emissions.  Total consumption in is L for fuel and kg for
-                emissions.
+                Values are tuples of size (2,).  The first element is the current usage in
+                g / s.  Total consumption is in kg.
         '''
 
         if self.edi is None:
@@ -553,7 +561,6 @@ class Nav:
         hc_total = EMISSIONS_TO_HC * emissions_total
 
         return {
-            'fuel': (self.current_fc, self.total_fc),
             'CO2': (co2_current, co2_total),
             'CO': (co_current, co_total),
             'NOx': (nox_current, nox_total),

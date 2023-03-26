@@ -79,9 +79,11 @@ for i, t in enumerate(timestamps):
 
     run_nav(nav, [data])
 
-    emissions = nav.get_fuel_and_emissions()
-    fuel.append(emissions['fuel'][0])
-    tfuel.append(emissions['fuel'][1])
+    fuel_use = nav.get_fuel()
+    fuel.append(fuel_use[0])
+    tfuel.append(fuel_use[1])
+
+    emissions = nav.get_emissions()
     co2.append(emissions['CO2'][0])
     tco2.append(emissions['CO2'][1])
     co.append(emissions['CO'][0])
