@@ -1,3 +1,9 @@
+try:
+    import unzip_requirements
+except ImportError:
+    pass
+
+
 import json
 import numpy as np
 # from nav import Nav
