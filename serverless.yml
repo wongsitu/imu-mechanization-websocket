@@ -29,6 +29,8 @@ functions:
           route: $default
 
 package:
+  include:
+    - requirements.txt
   exclude:
     - node_modules/**
     - .venv/**
