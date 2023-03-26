@@ -26,7 +26,8 @@ functions:
 
 package:
   exclude:
-    - '**/*'
+    - node_modules/**
+    - .venv/**
   include:
     - 'numpy'
     - 'scipy'
