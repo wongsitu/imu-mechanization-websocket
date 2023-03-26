@@ -24,6 +24,9 @@ functions:
             arn: arn:aws:lambda:us-east-1:028933020796:function:my-authorizer
       - websocket:
           route: $default
+    package:
+      include:
+        - requirements.txt
 
 resources:
   Resources:
