@@ -18,6 +18,8 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+    - name: Install requirements
+      run: npm install
     - name: serverless deploy
       uses: serverless/github-action@master
       with:
