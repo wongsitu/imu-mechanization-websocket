@@ -25,8 +25,6 @@ def websocket_handler(event, context):
     # print('It works', connection_id, domain_name, stage)
 
     print(json.dumps(event))
-    print("=====")
-    print(json.dumps(context))
 
     return {
         'statusCode': 200,
