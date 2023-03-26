@@ -1,5 +1,6 @@
 {
   "devDependencies": {
-    "serverless-python-requirements": "^6.0.0"
+    "serverless-python-requirements": "^6.0.0",
+    "serverless-websockets-plugin": "^1.0.0"
   }
 }

@@ -5,35 +5,44 @@ frameworkVersion: '3'
 provider:
   name: aws
   runtime: python3.8
-  region: "us-east-1"
-
-  websocketApiName: my-websocket-api
-  stage: ${opt:stage, 'dev'}
-
-  iamRoleStatements:
-    - Effect: "Allow"
-      Action:
-        - "execute-api:ManageConnections"
-      Resource:
-        - "arn:aws:execute-api:us-east-1:028933020796:*/*/POST/@connections/*"
+  stage: dev
+  region: us-east-1
+  apiGateway:
+    shouldStartNameWithService: true
+    websocketApiName: imu-mechanization-websocket
+  environment:
+    AUTHORIZER_ARN: arn:aws:lambda:us-east-1:028933020796:function:my-authorizer
 
 functions:
-  connectionManager:
-    handler: handler.connection_manager
+  websocket:
+    handler: handler.websocket_handler
     events:
       - websocket:
           route: $connect
-      - websocket:
-          route: $disconnect
+          authorizer:
+            name: authorizer
+            arn: arn:aws:lambda:us-east-1:028933020796:function:my-authorizer
       - websocket:
           route: $default
 
-package:
-  exclude:
-    - node_modules/**
-    - .venv/**
+resources:
+  Resources:
+    WebSocketAuthorizer:
+      Type: AWS::ApiGatewayV2::Authorizer
+      Properties:
+        ApiId: ${self:provider.apiGateway.websocketApiId}
+        AuthorizerType: REQUEST
+        AuthorizerUri: arn:aws:apigateway:${self:provider.region}:lambda:path/2015-03-31/functions/${self:provider.environment.AUTHORIZER_ARN}/invocations
+        IdentitySource: $request.header.Authorization
+        Name: authorizer
+
+    WebSocketPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: ${self:service}-${self:provider.stage}-websocket
+        Action: lambda:InvokeFunction
+        Principal: apigateway.amazonaws.com
+        SourceArn: "arn:aws:execute-api:${self:provider.region}:${self:provider.accountId}:${self:provider.apiGateway.websocketApiId}/*/*"
+
 plugins:
-  - serverless-python-requirements
-custom:
-  pythonRequirements:
-    zip: true
+  - serverless-websockets-plugin

@@ -5,7 +5,7 @@ from nav import Nav
 GRAVITY = 9.80665  # m / s ** 2
 
 
-def connection_manager(event, context):
+def websocket_handler(event, context):
     connection_id = event['requestContext']['connectionId']
     domain_name = event['requestContext']['domainName']
     stage = event['requestContext']['stage']
