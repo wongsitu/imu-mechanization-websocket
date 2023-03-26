@@ -12,17 +12,17 @@ import numpy as np
 
 
 def websocket_handler(event, context):
-    # connection_id = event['requestContext']['connectionId']
-    # domain_name = event['requestContext']['domainName']
-    # stage = event['requestContext']['stage']
+    connection_id = event['requestContext']['connectionId']
+    domain_name = event['requestContext']['domainName']
+    stage = event['requestContext']['stage']
 
-    # if event['requestContext']['eventType'] == 'CONNECT':
-    #     # Handle connect event
-    #     pass
-    # elif event['requestContext']['eventType'] == 'DISCONNECT':
-    #     # Handle disconnect event
-    #     pass
-    print('It works')
+    if event['requestContext']['eventType'] == 'CONNECT':
+        # Handle connect event
+        pass
+    elif event['requestContext']['eventType'] == 'DISCONNECT':
+        # Handle disconnect event
+        pass
+    print('It works', connection_id, domain_name, stage)
 
     return {
         'statusCode': 200,
