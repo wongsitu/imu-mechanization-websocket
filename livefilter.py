@@ -2,25 +2,25 @@ import numpy as np
 from collections import deque
 
 
-class LiveFilter:
-    '''
-    Base class for live filters
-    '''
+# class LiveFilter:
+#     '''
+#     Base class for live filters
+#     '''
 
-    def process(self, x: float) -> np.ndarray:
-        # Do not process NaNs
-        if np.isnan(x):
-            return x
-        return self._process(x)
+#     def process(self, x: float) -> np.ndarray:
+#         # Do not process NaNs
+#         if np.isnan(x):
+#             return x
+#         return self._process(x)
 
-    def __call__(self, x: float) -> np.ndarray:
-        return self.process(x)
+#     def __call__(self, x: float) -> np.ndarray:
+#         return self.process(x)
 
-    def _process(self, x):
-        raise NotImplementedError("Derived class must implement _process")
+#     def _process(self, x):
+#         raise NotImplementedError("Derived class must implement _process")
 
 
-class LiveSosFilter(LiveFilter):
+class LiveSosFilter:  # (LiveFilter):
     '''
     Live implementation of digital filter with second-order sections
     '''
@@ -33,7 +33,7 @@ class LiveSosFilter(LiveFilter):
         self.n_sections = sos.shape[0]
         self.state = np.zeros((self.n_sections, 2))
 
-    def _process(self, x: float) -> float:
+    def process(self, x: float) -> float:
         '''
         Filter incoming data with cascaded second-order sections
         '''
@@ -48,7 +48,7 @@ class LiveSosFilter(LiveFilter):
         return y
 
 
-class PureLiveSosFilter(LiveFilter):
+class PureLiveSosFilter:  # (LiveFilter):
     '''
     Live implementation of digital filter with second-order sections.
     One section only.
@@ -61,7 +61,7 @@ class PureLiveSosFilter(LiveFilter):
         self.sos = sos
         self.state = [0, 0]
 
-    def _process(self, x: float) -> float:
+    def process(self, x: float) -> float:
         '''
         Filter incoming data with cascaded second-order sections
         '''
@@ -181,7 +181,7 @@ class MultidimensionalLiveSosFilter:
         return np.array([self.filters[i].process(x[i]) for i in range(self.len)]).reshape(self.shape)
 
 
-class LiveMeanFilter(LiveFilter):
+class LiveMeanFilter:  # (LiveFilter):
     '''
     Efficient moving average filter
     '''
@@ -199,7 +199,7 @@ class LiveMeanFilter(LiveFilter):
         self.k = 0
         self.mean = 0
 
-    def _process(self, x: float) -> float:
+    def process(self, x: float) -> float:
         '''
         Update the simple moving average
         '''
