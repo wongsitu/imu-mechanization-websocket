@@ -1,4 +1,6 @@
 # Distribution / packaging
+
+.requirements.zip
 .Python
 env/
 build/
