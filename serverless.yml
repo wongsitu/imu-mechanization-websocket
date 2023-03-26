@@ -2,9 +2,6 @@ service: imu-mechanization-websocket
 
 frameworkVersion: '3'
 
-plugins:
-  - serverless-python-requirements
-
 provider:
   name: aws
   runtime: python3.8
@@ -35,7 +32,8 @@ package:
   exclude:
     - node_modules/**
     - .venv/**
-
+plugins:
+  - serverless-python-requirements
 custom:
   pythonRequirements:
     zip: true
