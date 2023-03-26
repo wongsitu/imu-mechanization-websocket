@@ -1,8 +1,8 @@
 import json
-import numpy as np
-from nav import Nav
+# import numpy as np
+# from nav import Nav
 
-GRAVITY = 9.80665  # m / s ** 2
+# GRAVITY = 9.80665  # m / s ** 2
 
 
 def websocket_handler(event, context):

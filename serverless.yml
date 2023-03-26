@@ -32,8 +32,6 @@ package:
   exclude:
     - node_modules/**
     - .venv/**
-plugins:
-  - serverless-python-requirements
 custom:
   pythonRequirements:
     zip: true
