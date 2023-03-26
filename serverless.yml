@@ -1,17 +1,31 @@
 service: imu-mechanization-websocket
 
-frameworkVersion: '3'
+plugins:
+  - serverless-python-requirements
 
 provider:
   name: aws
   runtime: python3.8
-  stage: dev
+  stage: ${opt:stage, 'dev'}
   region: us-east-1
   apiGateway:
-    shouldStartNameWithService: true
-    websocketApiName: imu-mechanization-websocket
-  environment:
-    AUTHORIZER_ARN: arn:aws:lambda:us-east-1:028933020796:function:my-authorizer
+    websocketApiName: my-websocket-api
+    websocketApiRouteSelectionExpression: $request.body.action
+  websocketApiId:
+    Fn::ImportValue:
+      !Join ['-', ['my-websocket-api', '${self:provider.stage}', 'WebSocketApiId']]
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - execute-api:ManageConnections
+      Resource:
+        - "arn:aws:execute-api:${self:provider.region}:${self:provider.account}:${self:provider.apiGateway.websocketApiId}/*/@connections/*"
+    - Effect: Allow
+      Action:
+        - logs:CreateLogGroup
+        - logs:CreateLogStream
+        - logs:PutLogEvents
+      Resource: "*"
 
 functions:
   websocket:
@@ -19,14 +33,16 @@ functions:
     events:
       - websocket:
           route: $connect
-          authorizer:
-            name: authorizer
-            arn: arn:aws:lambda:us-east-1:028933020796:function:my-authorizer
+      - websocket:
+          route: $disconnect
       - websocket:
           route: $default
-    package:
-      include:
-        - requirements.txt
+    # Define the list of external libraries here
+    pythonRequirements:
+      dockerizePip: non-linux
+      requirements:
+        - requests
+        - boto3
 
 resources:
   Resources:
@@ -35,17 +51,16 @@ resources:
       Properties:
         ApiId: ${self:provider.apiGateway.websocketApiId}
         AuthorizerType: REQUEST
-        AuthorizerUri: arn:aws:apigateway:${self:provider.region}:lambda:path/2015-03-31/functions/${self:provider.environment.AUTHORIZER_ARN}/invocations
         IdentitySource: $request.header.Authorization
-        Name: authorizer
-
+        Name: my-websocket-authorizer
+        AuthorizerPayloadFormatVersion: '2.0'
+        AuthorizerResultTtlInSeconds: 300
+        # Define your authorizer function here
+        AuthorizerUri: arn:aws:apigateway:${self:provider.region}:lambda:path/2015-03-31/functions/${self:service}-${self:provider.stage}-authorizer:${self:provider.runtime}/invocations
     WebSocketPermission:
       Type: AWS::Lambda::Permission
       Properties:
         FunctionName: ${self:service}-${self:provider.stage}-websocket
         Action: lambda:InvokeFunction
         Principal: apigateway.amazonaws.com
-        SourceArn: "arn:aws:execute-api:${self:provider.region}:${self:provider.accountId}:${self:provider.apiGateway.websocketApiId}/*/*"
-
-plugins:
-  - serverless-websockets-plugin
+        SourceArn: "arn:aws:execute-api:${self:provider.region}:${self:provider.account}:${self:provider.apiGateway.websocketApiId}/*"
