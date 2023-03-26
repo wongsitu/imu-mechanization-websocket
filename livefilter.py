@@ -54,7 +54,7 @@ class PureLiveSosFilter:  # (LiveFilter):
     One section only.
     '''
 
-    def __init__(self, sos: np.ndarray | list) -> None:
+    def __init__(self, sos: list) -> None:
         '''
         Initialize live second-order sections filter
         '''
@@ -113,12 +113,12 @@ class PureTripleLiveOneSectionSosFilter:
     Live implementation of digital filter with second-order sections, but vectorized and supports only one section
     '''
 
-    def __init__(self, sos: np.ndarray) -> None:
+    def __init__(self, sos: list | np.ndarray) -> None:
         '''
         Initialize live second-order sections filter
 
         Args:
-            sos: np.ndarray
+            sos: list | np.ndarray
         '''
 
         self.sos = sos
@@ -126,12 +126,12 @@ class PureTripleLiveOneSectionSosFilter:
         self.s1 = [0, 0]
         self.s2 = [0, 0]
 
-    def process(self, x: np.ndarray) -> float:
+    def process(self, x: list | np.ndarray) -> float:
         '''
         Filter incoming data with cascaded second-order sections
 
         Args:
-            x: np.ndarray of shape (dim, 1)
+            x: list | np.ndarray of length 3
         '''
 
         b0, b1, b2, _, a1, a2 = self.sos
