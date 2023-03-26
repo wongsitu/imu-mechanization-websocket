@@ -1,21 +1,30 @@
+try:
+    import unzip_requirements
+except ImportError:
+    pass
+
+
 import json
 import numpy as np
-from nav import Nav
+# from nav import Nav
 
-GRAVITY = 9.80665  # m / s ** 2
+# GRAVITY = 9.80665  # m / s ** 2
 
 
-def connection_manager(event, context):
-    connection_id = event['requestContext']['connectionId']
-    domain_name = event['requestContext']['domainName']
-    stage = event['requestContext']['stage']
+def websocket_handler(event, context):
+    # connection_id = event['requestContext']['connectionId']
+    # domain_name = event['requestContext']['domainName']
+    # stage = event['requestContext']['stage']
 
-    if event['requestContext']['eventType'] == 'CONNECT':
-        # Handle connect event
-        pass
-    elif event['requestContext']['eventType'] == 'DISCONNECT':
-        # Handle disconnect event
-        pass
+    # if event['requestContext']['eventType'] == 'CONNECT':
+    #     # Handle connect event
+    #     pass
+    # elif event['requestContext']['eventType'] == 'DISCONNECT':
+    #     # Handle disconnect event
+    #     pass
+    # print('It works', connection_id, domain_name, stage)
+
+    print(json.dumps(event))
 
     return {
         'statusCode': 200,

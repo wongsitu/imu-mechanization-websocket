@@ -1,13 +1,9 @@
 service: imu-mechanization-websocket
 
-frameworkVersion: '3'
-
 provider:
   name: aws
   runtime: python3.8
   region: "us-east-1"
-
-  websocketApiName: my-websocket-api
   stage: ${opt:stage, 'dev'}
 
   iamRoleStatements:
@@ -19,7 +15,7 @@ provider:
 
 functions:
   connectionManager:
-    handler: handler.connection_manager
+    handler: handler.websocket_handler
     events:
       - websocket:
           route: $connect
@@ -32,8 +28,14 @@ package:
   exclude:
     - node_modules/**
     - .venv/**
-plugins:
-  - serverless-python-requirements
+  include:
+    - 'numpy'
+    - 'scipy'
+    - 'AHRS'
+    - 'geopy'
 custom:
   pythonRequirements:
     zip: true
+    dockerizePip: true
+plugins:
+  - serverless-python-requirements
