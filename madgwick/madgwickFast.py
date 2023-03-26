@@ -241,4 +241,3 @@ def q_prod(p: np.ndarray, q: np.ndarray) -> np.ndarray:
     pq[2] = p[0] * q[2] - p[1] * q[3] + p[2] * q[0] + p[3] * q[1]
     pq[3] = p[0] * q[3] + p[1] * q[2] - p[2] * q[1] + p[3] * q[0]
     return pq
-
