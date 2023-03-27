@@ -12,24 +12,17 @@ import numpy as np
 
 
 def websocket_handler(event, context):
-    # connection_id = event['requestContext']['connectionId']
-    # domain_name = event['requestContext']['domainName']
-    # stage = event['requestContext']['stage']
-
-    # if event['requestContext']['eventType'] == 'CONNECT':
-    #     # Handle connect event
-    #     pass
-    # elif event['requestContext']['eventType'] == 'DISCONNECT':
-    #     # Handle disconnect event
-    #     pass
-    # print('It works', connection_id, domain_name, stage)
-
-    print(json.dumps(event))
-
-    return {
-        'statusCode': 200,
-        'body': json.dumps({'message': 'success'})
-    }
+    route = event.get('requestContext', {}).get('routeKey')
+    if route == '$connect':
+        return {'statusCode': 200}
+    elif route == '$disconnect':
+        return {'statusCode': 200}
+    elif route == '$default':
+        message = event.get('body')
+        response = {'message': 'Received message: {}'.format(message)}
+        return {'statusCode': 200, 'body': json.dumps(response)}
+    else:
+        return {'statusCode': 400, 'body': 'Unknown WebSocket event'}
 
 
 # def connect(event, context):
