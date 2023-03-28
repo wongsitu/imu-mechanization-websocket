@@ -14,15 +14,15 @@ import numpy as np
 def websocket_handler(event, context):
     route = event.get('requestContext', {}).get('routeKey')
     if route == '$connect':
-        return {'statusCode': 200}
+        return json.loads({'statusCode': 200})
     elif route == '$disconnect':
-        return {'statusCode': 200}
+        return json.loads({'statusCode': 200})
     elif route == '$default':
         message = event.get('body')
         response = {'message': 'Received message: {}'.format(message)}
-        return {'statusCode': 200, 'body': json.dumps(response)}
+        return json.loads({'statusCode': 200, 'body': json.dumps(response)})
     else:
-        return {'statusCode': 400, 'body': 'Unknown WebSocket event'}
+        return json.loads({'statusCode': 400, 'body': 'Unknown WebSocket event'})
 
 
 # def connect(event, context):
