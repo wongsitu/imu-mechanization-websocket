@@ -9,9 +9,9 @@ import numpy as np
 import boto3
 from botocore.config import Config
 
-# from nav import Nav
+from nav import Nav
 
-# GRAVITY = 9.80665  # m / s ** 2
+GRAVITY = 9.80665  # m / s ** 2
 
 client = boto3.client(
     'apigatewaymanagementapi',
@@ -94,9 +94,9 @@ def websocket_handler(event, context):
 
 #     fuel = nav.get_fuel(return_totals=False)
 #     emissions = nav.get_emissions(return_totals=False)
-#     motion = nav.get_motion()
+#     speed = nav.get_motion(speed_only=True)
 
-#     return fuel | emissions
+#     return fuel | emissions | speed
 
 
 # def end_nav():
