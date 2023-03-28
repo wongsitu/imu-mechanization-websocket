@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Union
 from math import sqrt, cos, sin, pi
 
 import numpy as np
@@ -55,9 +56,9 @@ from madgwick.madgwickFast import updateMARGFast
 #         vz_depth: int = 3,
 #         period: float = 0.01,
 #         algo: str = 'madgwick',
-#         displacement = None,
-#         is_supercharged= None,
-#         drag_coeff= None,
+#         displacement: Union[float, None] = None,
+#         is_supercharged: Union[float, None] = None,
+#         drag_coeff: Union[float, None] = None,
 #         smooth_fc: bool = True,
 #         fc_smoothing_critical_freq: float = 0.02,
 #         imu_damping: float = 0.1,
@@ -143,7 +144,9 @@ from madgwick.madgwickFast import updateMARGFast
 #         self.fc_reduction_factor = fc_reduction_factor
 
 #     @staticmethod
-#     def _get_ref_field(lat: float, long: float, alt: float, return_inclination: bool = False) -> np.ndarray | float:
+#     def _get_ref_field(
+#         lat: float, long: float, alt: float, return_inclination: bool = False
+#     ) -> Union[np.ndarray, float]:
 #         '''
 #         Get the reference field from pyCRGI
 
@@ -240,15 +243,14 @@ from madgwick.madgwickFast import updateMARGFast
 #         Returns:
 #             index: int
 #         '''
-#         match displacement:
-#             case _ if displacement < 1.6:
-#                 edi = 0
-#             case _ if displacement < 2.5:
-#                 edi = 1
-#             case _ if displacement < 4:
-#                 edi = 2
-#             case _:
-#                 edi = 3
+#         if displacement < 1.6:
+#             edi = 0
+#         elif displacement < 2.5:
+#             edi = 1
+#         elif displacement < 4:
+#             edi = 2
+#         else:
+#             edi = 3
 #         if is_supercharged and edi != 3:
 #             edi += 1
 #         return edi
@@ -445,9 +447,9 @@ from madgwick.madgwickFast import updateMARGFast
 
 #     def set_vehicle_params(
 #         self,
-#         displacement: float | None = None,
-#         is_supercharged: bool | None = None,
-#         drag_coeff: float | None = None,
+#         displacement: Union[float, None] = None,
+#         is_supercharged: Union[bool, None] = None,
+#         drag_coeff: Union[float, None] = None,
 #         reset: bool = False,
 #     ) -> None:
 #         '''
