@@ -7,7 +7,7 @@ from .._debug import typechecked, DEBUG
 
 
 @typechecked
-def get_coeffs(year: float) -> tuple[list, list]:
+def get_coeffs(year: float):
     """
     Processes coefficients
 
@@ -19,18 +19,24 @@ def get_coeffs(year: float) -> tuple[list, list]:
 
     if year < 1900.0 or year > 2030.0:
         if DEBUG:
-            warnings.warn((
-                f"Will not work with a date of {year:f}. "
-                "Date must be in the range 1900.0 <= year <= 2030.0. "
-                "On return [], []"
-            ), RuntimeWarning)
+            warnings.warn(
+                (
+                    f"Will not work with a date of {year:f}. "
+                    "Date must be in the range 1900.0 <= year <= 2030.0. "
+                    "On return [], []"
+                ),
+                RuntimeWarning,
+            )
         return [], []
 
     if year > 2025.0 and DEBUG:
-        warnings.warn((
-            "This version of the IGRF is intended for use up to 2025.0 ."
-            f"Values for {year:f} will be computed but may be of reduced accuracy."
-        ), RuntimeWarning) # not adapt for the model but can calculate
+        warnings.warn(
+            (
+                "This version of the IGRF is intended for use up to 2025.0 ."
+                f"Values for {year:f} will be computed but may be of reduced accuracy."
+            ),
+            RuntimeWarning,
+        )  # not adapt for the model but can calculate
 
     if year >= 2020.0:
         t = year - 2020.0

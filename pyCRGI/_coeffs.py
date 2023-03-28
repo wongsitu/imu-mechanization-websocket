@@ -6,7 +6,7 @@ from ._debug import typechecked
 
 
 @typechecked
-def load_coeffs(filename: str) -> list[float]:
+def load_coeffs(filename: str):
     """
     Loads IGRF coefficients from file.
 
@@ -16,14 +16,14 @@ def load_coeffs(filename: str) -> list[float]:
         g and h, one by one
     """
 
-    with open(filename, mode = 'r', encoding = 'utf-8') as f:
+    with open(filename, mode='r', encoding='utf-8') as f:
         gh2arr = [
             [float(coeff) for coeff in line.strip('\n').split()[3:]]
             for line in f
             if line.startswith('g ') or line.startswith('h ')
         ]
 
-    gh2arr = list(map(list, zip(*gh2arr))) # transpose
+    gh2arr = list(map(list, zip(*gh2arr)))  # transpose
 
     gh = []
     for idx, column in enumerate(gh2arr):
