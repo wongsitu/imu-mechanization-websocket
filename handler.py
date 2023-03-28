@@ -10,7 +10,7 @@ from botocore.config import Config
 
 from nav import Nav
 
-GRAVITY = 9.80665  # m / s ** 2
+# GRAVITY = 9.80665  # m / s ** 2
 DEG_TO_RAD = np.pi / 180
 
 client = boto3.client(
@@ -33,8 +33,11 @@ def websocket_handler(event, context):
         message = event.get('body', {})
         message = json.loads(message)
 
+        print(message)
+
         if 'nav' not in globals():
-            set_nav(message['displacement'], message['isSupercharged'], message['drag'])
+            drag = message['drag'] if message['drag'] > 0 else None
+            set_nav(message['displacement'], message['isSupercharged'], drag)
 
         acc = np.array(
             [
@@ -42,7 +45,7 @@ def websocket_handler(event, context):
                 message['accelerometerWithGravity']['y'],
                 message['accelerometerWithGravity']['z'],
             ]
-        )
+        )  ## Make sure this is in m / s ** 2
 
         acc_nog = np.array(
             [
@@ -50,7 +53,7 @@ def websocket_handler(event, context):
                 message['accelerometerWithoutGravity']['y'],
                 message['accelerometerWithoutGravity']['z'],
             ]
-        )
+        )  ## Make sure this is in m / s ** 2
 
         gyro = np.array(
             [
@@ -58,7 +61,7 @@ def websocket_handler(event, context):
                 message['gyroscope']['gamma'] * DEG_TO_RAD,
                 message['gyroscope']['alpha'] * DEG_TO_RAD,
             ]
-        )
+        )  ## Make sure this is in rad / s
 
         mag = np.array(
             [
@@ -66,30 +69,19 @@ def websocket_handler(event, context):
                 message['magnetometer']['y'],
                 message['magnetometer']['z'],
             ]
-        )
+        )  ## Units arbitrary (nT)
+
+        loc = [
+            message['location']['latitude'],
+            message['location']['longitude'],
+            message['location']['altitude'],
+            message['location']['heading'] if message['location']['heading'] > 0 else None,
+            message['location']['speed'] if message['location']['speed'] > 0 else None,
+        ]
 
         payload = run_nav(
-            message['time'],
-            acc,
-            acc_nog,
-            gyro,
-            mag,
-            message['lat'],
-            message['lon'],
-            message['alt'],
-            message['heading'],
-            message['speed'],
-        )
-
-        # payload = {
-        #     'fuel': np.random.rand(),
-        #     'speed': np.random.rand(),
-        #     'co2': np.random.rand(),
-        #     'co': np.random.rand(),
-        #     'nox': np.random.rand(),
-        #     'unburned_hydrocarbons': np.random.rand(),
-        #     'particulate': np.random.rand(),
-        # }
+            t=message['time'] / 1000, acc=acc, acc_nog=acc_nog, gyro=gyro, mag=mag, loc=loc
+        )  # Convert time from ms to s
 
         client.post_to_connection(ConnectionId=connectionId, Data=json.dumps(payload).encode('utf-8'))
         return {'statusCode': 200}
@@ -102,7 +94,7 @@ def set_nav(displacement=None, is_supercharged=None, drag_coeff=None):
     nav = Nav(
         smoothing_critical_freq=0.03,
         vz_depth=3,
-        period=0.01,  ############################ UPDATE THIS #######################################
+        period=0.25,
         algo='madgwick',
         smooth_fc=True,
         fc_smoothing_critical_freq=0.02,
@@ -121,14 +113,14 @@ def set_params(displacement, is_supercharged, drag_coeff=None):
     nav.set_vehicle_params(displacement, is_supercharged, drag_coeff)
 
 
-def run_nav(t, acc, acc_nog, gyro, mag, lat, long, alt, heading, speed):
+def run_nav(t, acc, acc_nog, gyro, mag, loc):
     if 'nav' not in globals():
         print('WARNING: Navigation not initialized. Call set_nav to initialize.')
         return
 
     nav.process_imu_update(t, acc, acc_nog, gyro, mag)
-    if lat is not None:
-        nav.process_gps_update(t, lat, long, alt, heading, speed)
+    if loc[0] is not None:
+        nav.process_gps_update(t, *loc)
 
     fuel = nav.get_fuel(return_totals=False)
     emissions = nav.get_emissions(return_totals=False)
@@ -143,5 +135,6 @@ def end_nav():
     del nav
     return trip_metrics
 
-def nav_light(t_prev, t_curr, lat, long, alt_prev, alt_curr, v_prev):
-    pass
+
+# def nav_light(t_prev, t, vy_prev, vy, vz_prev, alt_prev, alt):
+#     tdiff = t - t_prev

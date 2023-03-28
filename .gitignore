@@ -204,4 +204,3 @@ cython_debug/
 static
 
 __pycache__
-test_nav.py

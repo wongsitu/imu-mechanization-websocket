@@ -108,7 +108,7 @@ class Nav:
         self.v_z_filter = LiveMeanFilter(vz_depth)
         self.prev_alt_timestamp = None
         # self.total_distance = 0
-        # self.prev_lat_long = None
+        self.prev_lat_long = None
 
         # Initialize parameters for the AHRS algorithm
         self.ahrs = None  # AHRS algorithm
@@ -367,6 +367,10 @@ class Nav:
         Returns:
             None
         '''
+        # Return if there is no GPS update
+        if self.prev_lat_long == (lat, long):
+            return
+
         # Return if we can't compute rotation matrices
         if self.latest_raw_imu is None:
             return
@@ -430,6 +434,8 @@ class Nav:
         # else:
         #     self.total_distance += geodesic((lat, long), self.prev_lat_long).meters
         #     self.prev_lat_long = (lat, long)
+
+        self.prev_lat_long = (lat, long)
 
     def get_motion(self, speed_only=False) -> dict:
         '''
