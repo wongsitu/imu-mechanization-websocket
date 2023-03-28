@@ -40,9 +40,7 @@ import numpy as np
 from math import sqrt
 
 
-def updateIMUFast(
-    q: np.ndarray, gyr: np.ndarray, acc: np.ndarray, gain: float = 0.033, dt: float = 0.01
-) -> np.ndarray:
+def updateIMUFast(q: np.ndarray, gyr: np.ndarray, acc: np.ndarray, dt: float = 0.01) -> np.ndarray:
     """
     Quaternion Estimation with IMU architecture.
 
@@ -90,16 +88,14 @@ def updateIMUFast(
     # Objective Function Gradient
     gradient = J.T @ f  # (eq. 34)
     gradient /= norm4(gradient)
-    qDot -= gain * gradient  # (eq. 33)
+    qDot -= 0.033 * gradient  # (eq. 33)  # gain = 0.033
 
     q += qDot * dt  # (eq. 13)
     q /= norm4(q)
     return q
 
 
-def updateMARGFast(
-    q: np.ndarray, gyr: np.ndarray, acc: np.ndarray, mag: np.ndarray, gain: float = 0.041, dt: float = 0.01
-) -> np.ndarray:
+def updateMARGFast(q: np.ndarray, gyr: np.ndarray, acc: np.ndarray, mag: np.ndarray, dt: float = 0.01) -> np.ndarray:
     """
     Quaternion Estimation with a MARG architecture.
 
@@ -188,7 +184,7 @@ def updateMARGFast(
     )  # (eq. 32)
     gradient = J.T @ f  # (eq. 34)
     gradient /= norm4(gradient)
-    qDot -= gain * gradient  # (eq. 33)
+    qDot -= 0.041 * gradient  # (eq. 33)  # gain = 0.041
 
     q += qDot * dt  # (eq. 13)
     return q / norm4(q)
