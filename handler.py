@@ -7,13 +7,16 @@ except ImportError:
 import json
 import numpy as np
 import boto3
+from botocore.config import Config
 
 # from nav import Nav
 
 # GRAVITY = 9.80665  # m / s ** 2
 
 client = boto3.client(
-    'apigatewaymanagementapi', endpoint_url="https://98ldqkpb7k.execute-api.us-east-1.amazonaws.com/dev"
+    'apigatewaymanagementapi',
+    endpoint_url="https://98ldqkpb7k.execute-api.us-east-1.amazonaws.com/dev",
+    config=Config(tcp_keepalive=True),
 )
 
 
