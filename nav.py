@@ -87,7 +87,7 @@ class Nav:
         self.v_llf = np.zeros(3)  # Velocity in the local level frame
         self.heading = None  # Heading of the car in degrees clockwise from North
         self.R_l2v = np.eye(3)
-        self.average_speed = LiveMeanFilter()
+        # self.average_speed = LiveMeanFilter()
 
         # Initialize the filters for smoothing incomming accel and gyro data
         sos = butter(2, smoothing_critical_freq, output='sos', fs=None, btype='lowpass')[0]
@@ -344,8 +344,8 @@ class Nav:
         # Update the fuel consumption
         self._update_fuel_consumption(timediff)
 
-        # Update the average speed
-        self.average_speed.process(sqrt(self.v[1] ** 2 + self.v[2] ** 2))
+        # # Update the average speed
+        # self.average_speed.process(sqrt(self.v[1] ** 2 + self.v[2] ** 2))
 
     def process_gps_update(
         self, timestamp: float, lat: float, long: float, alt: float, heading: float, speed: float
@@ -428,13 +428,16 @@ class Nav:
             self.total_distance += geodesic((lat, long), self.prev_lat_long).meters
             self.prev_lat_long = (lat, long)
 
-    def get_motion(self) -> tuple[float]:
+    def get_motion(self, v_only=False) -> tuple[float]:
         '''
         Get the current velocity and acceleration
 
         Returns:
             tuple[np.ndarray] - most recent velocity and acceleration in the vehicle frame
         '''
+        if v_only:
+
+            
         return self.v, self.a
 
     def set_vehicle_params(
@@ -497,53 +500,68 @@ class Nav:
             self.current_fc = self.fc_filter.process(self.current_fc)
         self.total_fc += self.current_fc * timestep * 0.001  # Convert mL to L
 
-    def get_fuel(self) -> tuple[float]:
+    def get_fuel(self, return_totals: bool = False) -> tuple[float]:
         '''
         Return the best estimates of the current and total fuel consumption
 
-        Returns:
-            tuple[float] - Current fuel usage in mL / s and total fuel usage in L
-        '''
-        return self.current_fc, self.total_fc
+        Args:
+            return_totals: bool - Whether or not to return total consumption information
 
-    def get_emissions(self) -> dict:
+        Returns:
+            dict: Current fuel usage in mL / s and total fuel usage in L
+        '''
+        if return_totals:
+            return {'fuel_current': self.current_fc, 'fuel_total': self.total_fc}
+        return {'fuel_current': self.current_fc}
+
+    def get_emissions(self, return_totals: bool = False) -> dict:
         '''
         Return the best estimates of the current and cumulative emissions
+
+        Args:
+            return_totals: bool - Whether or not to return total emissions information
 
         Returns:
             dict: Current and total emissions information.
                 Keys indicate the type of emission.
-                Values are tuples of size (2,).  The first element is the current usage in
-                g / s.  Total consumption is in kg.
+                Current usage in g / s.  Total consumption is in kg.
+
         '''
         if self.edi is None:
             print('WARNING: Vehicle parameters not set. Call set_vehicle_params to set.')
             return {}
 
         emissions_current = GAS_TO_EMISSIONS * self.current_fc
-        emissions_total = GAS_TO_EMISSIONS * self.total_fc
-
         co2_current = EMISSIONS_TO_CO2 * emissions_current
-        co2_total = EMISSIONS_TO_CO2 * emissions_total
-
         co_current = EMISSIONS_TO_CO * emissions_current
-        co_total = EMISSIONS_TO_CO * emissions_total
-
         nox_current = EMISSIONS_TO_NOX * emissions_current
-        nox_total = EMISSIONS_TO_NOX * emissions_total
-
         particulate_current = EMISSIONS_TO_PARTICULATE * emissions_current
-        particulate_total = EMISSIONS_TO_PARTICULATE * emissions_total
-
         hc_current = EMISSIONS_TO_HC * emissions_current
+
+        emissions = {
+            'co2_current': co2_current,
+            'co_current': co_current,
+            'nox_current': nox_current,
+            'particulate_current': particulate_current,
+            'unburned_hc_current': hc_current,
+        }
+
+        if not return_totals:
+            return emissions
+
+        emissions_total = GAS_TO_EMISSIONS * self.total_fc
+        co2_total = EMISSIONS_TO_CO2 * emissions_total
+        co_total = EMISSIONS_TO_CO * emissions_total
+        nox_total = EMISSIONS_TO_NOX * emissions_total
+        particulate_total = EMISSIONS_TO_PARTICULATE * emissions_total
         hc_total = EMISSIONS_TO_HC * emissions_total
 
-        return {
-            'CO2': (co2_current, co2_total),
-            'CO': (co_current, co_total),
-            'NOx': (nox_current, nox_total),
-            'particulate': (particulate_current, particulate_total),
-            'HC': (hc_current, hc_total),
+        return emissions | {
+            'co2_total': co2_total,
+            'co_total': co_total,
+            'nox_total': nox_total,
+            'particulate_total': particulate_total,
+            'unburned_hc_total': hc_total,
         }
 
     def get_trip_metrics(self) -> tuple[float]:
@@ -551,7 +569,7 @@ class Nav:
         Compute aggregate metrics about the current trip
 
         Returns:
-            tuple[float] - total distance travelled in meters, average speed in m / s, and elapsed time in seconds
+            tuple[float] - total distance travelled in meters and elapsed time in seconds
         '''
         ################################### UPDATE THIS DEPENDING ON TIME UNITS ###################################
         if self.prev_timestamp is None:
@@ -559,4 +577,4 @@ class Nav:
         else:
             elapsed_time = self.prev_timestamp + self.period - self.t0
 
-        return self.total_distance, self.average_speed.get_mean(), elapsed_time
+        return self.total_distance, elapsed_time
