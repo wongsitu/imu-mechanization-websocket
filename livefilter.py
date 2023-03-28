@@ -155,7 +155,7 @@ class MultidimensionalLiveSosFilter:
     Multidimensional extension to the LiveSosFilter class
     '''
 
-    def __init__(self, sos: np.ndarray, shape: Union[int, tuple[int]]) -> None:
+    def __init__(self, sos: np.ndarray, shape) -> None:
         if isinstance(shape, int):
             self.filters = [LiveSosFilter(sos) for _ in range(shape)]
         elif isinstance(shape, Union[tuple, list]):

@@ -256,7 +256,7 @@ from madgwick.madgwickFast import updateMARGFast
 #         return edi
 
 #     @staticmethod
-#     def _get_fc_params(speed: float, edi: int) -> tuple[float]:
+#     def _get_fc_params(speed: float, edi: int):
 #         '''
 #         Get the regression coefficients for the linear fit of fuel consumption to VSP
 
@@ -569,7 +569,7 @@ from madgwick.madgwickFast import updateMARGFast
 #             'unburned_hc_total': hc_total,
 #         }
 
-#     def get_trip_metrics(self) -> tuple[float]:
+#     def get_trip_metrics(self):
 #         '''
 #         Compute aggregate metrics about the current trip
 
