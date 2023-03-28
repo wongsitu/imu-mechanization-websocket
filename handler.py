@@ -20,8 +20,8 @@ def websocket_handler(event, context):
     elif route == '$disconnect':
         return {'statusCode': 200 }
     elif route == '$default':
-        connectionId = event['connectionId']
-        client.post_to_connection(ConnectionId = connectionId, Data = msg.encode(('utf-8')))
+        # connectionId = event['connectionId']
+        # client.post_to_connection(ConnectionId = connectionId, Data = msg.encode(('utf-8')))
 
         message = event.get('body')
         response = {'message': 'Received message: {}'.format(message)}
