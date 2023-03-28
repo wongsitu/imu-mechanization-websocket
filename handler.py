@@ -4,14 +4,14 @@ except ImportError:
     pass
 
 import json
-import numpy as np
+from numpy import array, pi
 import boto3
 from botocore.config import Config
 
 from nav import Nav
 
 # GRAVITY = 9.80665  # m / s ** 2
-DEG_TO_RAD = np.pi / 180
+DEG_TO_RAD = pi / 180
 
 client = boto3.client(
     'apigatewaymanagementapi',
@@ -39,7 +39,7 @@ def websocket_handler(event, context):
             drag = message['drag'] if message['drag'] > 0 else None
             set_nav(message['displacement'], message['isSupercharged'], drag)
 
-        acc = np.array(
+        acc = array(
             [
                 message['accelerometerWithGravity']['x'],
                 message['accelerometerWithGravity']['y'],
@@ -47,7 +47,7 @@ def websocket_handler(event, context):
             ]
         )  ## Make sure this is in m / s ** 2
 
-        acc_nog = np.array(
+        acc_nog = array(
             [
                 message['accelerometerWithoutGravity']['x'],
                 message['accelerometerWithoutGravity']['y'],
@@ -55,7 +55,7 @@ def websocket_handler(event, context):
             ]
         )  ## Make sure this is in m / s ** 2
 
-        gyro = np.array(
+        gyro = array(
             [
                 message['gyroscope']['beta'] * DEG_TO_RAD,
                 message['gyroscope']['gamma'] * DEG_TO_RAD,
@@ -63,7 +63,7 @@ def websocket_handler(event, context):
             ]
         )  ## Make sure this is in rad / s
 
-        mag = np.array(
+        mag = array(
             [
                 message['magnetometer']['x'],
                 message['magnetometer']['y'],
