@@ -1,14 +1,14 @@
-# from datetime import datetime
-# from math import sqrt, cos, sin, pi
+from datetime import datetime
+from math import sqrt, cos, sin, pi
 
-# import numpy as np
-# from scipy.signal import butter
-# from ahrs.filters import EKF, Madgwick
-# from geopy.distance import geodesic
+import numpy as np
+from scipy.signal import butter
+from ahrs.filters import EKF, Madgwick
+from geopy.distance import geodesic
 
-# from livefilter import PureLiveSosFilter, LiveMeanFilter, PureTripleLiveOneSectionSosFilter
-# from pyCRGI.pure import get_value
-# from madgwick.madgwickFast import updateMARGFast
+from livefilter import PureLiveSosFilter, LiveMeanFilter, PureTripleLiveOneSectionSosFilter
+from pyCRGI.pure import get_value
+from madgwick.madgwickFast import updateMARGFast
 
 
 # GRAVITY = 9.80665  # m / s ** 2
@@ -55,9 +55,9 @@
 #         vz_depth: int = 3,
 #         period: float = 0.01,
 #         algo: str = 'madgwick',
-#         displacement: float | None = None,
-#         is_supercharged: bool | None = None,
-#         drag_coeff: float | None = None,
+#         displacement = None,
+#         is_supercharged= None,
+#         drag_coeff= None,
 #         smooth_fc: bool = True,
 #         fc_smoothing_critical_freq: float = 0.02,
 #         imu_damping: float = 0.1,
@@ -428,7 +428,7 @@
 #             self.total_distance += geodesic((lat, long), self.prev_lat_long).meters
 #             self.prev_lat_long = (lat, long)
 
-#     def get_motion(self, speed_only=False) -> tuple[float]:
+#     def get_motion(self, speed_only=False) -> dict:
 #         '''
 #         Get the current velocity and acceleration
 
@@ -503,7 +503,7 @@
 #             self.current_fc = self.fc_filter.process(self.current_fc)
 #         self.total_fc += self.current_fc * timestep * 0.001  # Convert mL to L
 
-#     def get_fuel(self, return_totals: bool = False) -> tuple[float]:
+#     def get_fuel(self, return_totals: bool = False) -> dict:
 #         '''
 #         Return the best estimates of the current and total fuel consumption
 
@@ -582,5 +582,6 @@
 
 #         return self.total_distance, elapsed_time
 
-class Nav():
+
+class Nav:
     pass
