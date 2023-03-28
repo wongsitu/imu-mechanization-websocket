@@ -36,11 +36,11 @@ References
     http://www.x-io.co.uk/open-source-imu-and-ahrs-algorithms/
 '''
 
-import numpy as np
+from numpy import ndarray, array, zeros
 from math import sqrt
 
 
-def updateIMUFast(q: np.ndarray, gyr: np.ndarray, acc: np.ndarray, dt: float = 0.01) -> np.ndarray:
+def updateIMUFast(q: ndarray, gyr: ndarray, acc: ndarray, dt: float = 0.01) -> ndarray:
     """
     Quaternion Estimation with IMU architecture.
 
@@ -71,14 +71,14 @@ def updateIMUFast(q: np.ndarray, gyr: np.ndarray, acc: np.ndarray, dt: float = 0
     qz2 = 2 * qz
 
     # Gradient objective function (eq. 25) and Jacobian (eq. 26)
-    f = np.array(
+    f = array(
         [
             qx2 * qz - qw2 * qy - a[0],
             qw2 * qx + qy2 * qz - a[1],
             2.0 * (0.5 - qx * qx - qy * qy) - a[2],
         ]
     )  # (eq. 25)
-    J = np.array(
+    J = array(
         [
             [-qy2, qz2, -qw2, qx2],
             [qx2, qw2, qz2, qy2],
@@ -95,7 +95,7 @@ def updateIMUFast(q: np.ndarray, gyr: np.ndarray, acc: np.ndarray, dt: float = 0
     return q
 
 
-def updateMARGFast(q: np.ndarray, gyr: np.ndarray, acc: np.ndarray, mag: np.ndarray, dt: float = 0.01) -> np.ndarray:
+def updateMARGFast(q: ndarray, gyr: ndarray, acc: ndarray, mag: ndarray, dt: float = 0.01) -> ndarray:
     """
     Quaternion Estimation with a MARG architecture.
 
@@ -162,7 +162,7 @@ def updateMARGFast(q: np.ndarray, gyr: np.ndarray, acc: np.ndarray, mag: np.ndar
     qwqxpqyqz = qwqx + qyqz
     qxqzmqwqy = qxqz - qwqy
 
-    f = np.array(
+    f = array(
         [
             2.0 * qxqzmqwqy - a[0],
             2.0 * qwqxpqyqz - a[1],
@@ -172,7 +172,7 @@ def updateMARGFast(q: np.ndarray, gyr: np.ndarray, acc: np.ndarray, mag: np.ndar
             bx2 * (qwqy + qxqz) + bz2 * (0.5 - qxsqpqysq) - m[2],
         ]
     )  # (eq. 31)
-    J = np.array(
+    J = array(
         [
             [-qy2, qz2, -qw2, qx2],
             [qx2, qw2, qz2, qy2],
@@ -198,7 +198,7 @@ def norm4(x):
     return sqrt(x[0] * x[0] + x[1] * x[1] + x[2] * x[2] + x[3] * x[3])
 
 
-def q_conj(q: np.ndarray) -> np.ndarray:
+def q_conj(q: ndarray) -> ndarray:
     """
     Conjugate of unit quaternion
 
@@ -212,10 +212,10 @@ def q_conj(q: np.ndarray) -> np.ndarray:
     q_conj : numpy.ndarray
         Conjugated quaternion or 2D array of conjugated Quaternions.
     """
-    return np.array([q[0], -q[1], -q[2], -q[2]])
+    return array([q[0], -q[1], -q[2], -q[2]])
 
 
-def q_prod(p: np.ndarray, q: np.ndarray) -> np.ndarray:
+def q_prod(p: ndarray, q: ndarray) -> ndarray:
     """
     Product of two unit quaternions.
 
@@ -231,7 +231,7 @@ def q_prod(p: np.ndarray, q: np.ndarray) -> np.ndarray:
     pq : numpy.ndarray
         Product of both quaternions
     """
-    pq = np.zeros(4)
+    pq = zeros(4)
     pq[0] = p[0] * q[0] - p[1] * q[1] - p[2] * q[2] - p[3] * q[3]
     pq[1] = p[0] * q[1] + p[1] * q[0] + p[2] * q[3] - p[3] * q[2]
     pq[2] = p[0] * q[2] - p[1] * q[3] + p[2] * q[0] + p[3] * q[1]
