@@ -21,34 +21,15 @@ def websocket_handler(event, context):
         return {'statusCode': 200 }
     elif route == '$default':
         message = event.get('body', {})
-        print(message)
 
         connectionId = event.get('requestContext', {}).get('connectionId')
-        payload= { 'fuelConsumption': 10, 'co2Emissions': 0, 'n2oEmissions': 0, 'ch4Emissions': 0 }
-        client.post_to_connection(ConnectionId=connectionId, Data=json.dumps(payload).encode('utf-8'))
+        message = event.get('body', {})
+        # payload= { 'fuelConsumption': 10, 'co2Emissions': 0, 'n2oEmissions': 0, 'ch4Emissions': 0 }
+
+        client.post_to_connection(ConnectionId=connectionId, Data=json.dumps(message).encode('utf-8'))
         return {'statusCode': 200 }
     else:
         return {'statusCode': 400, 'body': 'Unknown WebSocket event'}
-
-
-# def connect(event, context):
-#     connection_id = event['requestContext']['connectionId']
-#     print(f"New connection: {connection_id}")
-#     return {"statusCode": 200}
-
-
-# def default(event, context):
-#     connection_id = event['requestContext']['connectionId']
-#     body = json.loads(event['body'])
-#     message = body['message']
-#     print(f"Received message: {message} from {connection_id}")
-
-#     # Receive a message to start navigation -> call set_nav
-#     # Set vehicle paramters with set_params (if not already set with set_nav)
-#     # Receive a batch of IMU/Magnetometer/GPS data and pass it to run_nav. Return the fuel consumption and emissions data
-#     # End the navigation with end_nav and return trip metrics
-
-#     return {"statusCode": 200}
 
 
 def set_nav(displacement=None, is_supercharged=None, drag_coeff=None):
