@@ -31,64 +31,65 @@ def websocket_handler(event, context):
 
         connectionId = event.get('requestContext', {}).get('connectionId')
         message = event.get('body', {})
+        message = json.loads(message)
 
-        # if 'nav' not in globals():
-        #     set_nav(message['displacement'], message['isSupercharged'], message['drag'])
+        if 'nav' not in globals():
+            set_nav(message['displacement'], message['isSupercharged'], message['drag'])
 
-        # acc = np.array(
-        #     [
-        #         message['accelerometerWithGravity']['x'],
-        #         message['accelerometerWithGravity']['y'],
-        #         message['accelerometerWithGravity']['z'],
-        #     ]
-        # )
+        acc = np.array(
+            [
+                message['accelerometerWithGravity']['x'],
+                message['accelerometerWithGravity']['y'],
+                message['accelerometerWithGravity']['z'],
+            ]
+        )
 
-        # acc_nog = np.array(
-        #     [
-        #         message['accelerometerWithoutGravity']['x'],
-        #         message['accelerometerWithoutGravity']['y'],
-        #         message['accelerometerWithoutGravity']['z'],
-        #     ]
-        # )
+        acc_nog = np.array(
+            [
+                message['accelerometerWithoutGravity']['x'],
+                message['accelerometerWithoutGravity']['y'],
+                message['accelerometerWithoutGravity']['z'],
+            ]
+        )
 
-        # gyro = np.array(
-        #     [
-        #         message['gyroscope']['beta'] * DEG_TO_RAD,
-        #         message['gyroscope']['gamma'] * DEG_TO_RAD,
-        #         message['gyroscope']['alpha'] * DEG_TO_RAD,
-        #     ]
-        # )
+        gyro = np.array(
+            [
+                message['gyroscope']['beta'] * DEG_TO_RAD,
+                message['gyroscope']['gamma'] * DEG_TO_RAD,
+                message['gyroscope']['alpha'] * DEG_TO_RAD,
+            ]
+        )
 
-        # mag = np.array(
-        #     [
-        #         message['magnetometer']['x'],
-        #         message['magnetometer']['y'],
-        #         message['magnetometer']['z'],
-        #     ]
-        # )
+        mag = np.array(
+            [
+                message['magnetometer']['x'],
+                message['magnetometer']['y'],
+                message['magnetometer']['z'],
+            ]
+        )
 
-        # payload = run_nav(
-        #     message['time'],
-        #     acc,
-        #     acc_nog,
-        #     gyro,
-        #     mag,
-        #     message['lat'],
-        #     message['lon'],
-        #     message['alt'],
-        #     message['heading'],
-        #     message['speed'],
-        # )
+        payload = run_nav(
+            message['time'],
+            acc,
+            acc_nog,
+            gyro,
+            mag,
+            message['lat'],
+            message['lon'],
+            message['alt'],
+            message['heading'],
+            message['speed'],
+        )
 
-        payload = {
-            'fuel': np.random.rand(),
-            'speed': np.random.rand(),
-            'co2': np.random.rand(),
-            'co': np.random.rand(),
-            'nox': np.random.rand(),
-            'unburned_hydrocarbons': np.random.rand(),
-            'particulate': np.random.rand(),
-        }
+        # payload = {
+        #     'fuel': np.random.rand(),
+        #     'speed': np.random.rand(),
+        #     'co2': np.random.rand(),
+        #     'co': np.random.rand(),
+        #     'nox': np.random.rand(),
+        #     'unburned_hydrocarbons': np.random.rand(),
+        #     'particulate': np.random.rand(),
+        # }
 
         client.post_to_connection(ConnectionId=connectionId, Data=json.dumps(payload).encode('utf-8'))
         return {'statusCode': 200}
