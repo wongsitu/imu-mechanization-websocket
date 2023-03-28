@@ -1,4 +1,4 @@
-import numpy as np
+from numpy import ndarray, array, zeros, prod
 from collections import deque
 from typing import Union
 
@@ -8,13 +8,13 @@ from typing import Union
 #     Base class for live filters
 #     '''
 
-#     def process(self, x: float) -> np.ndarray:
+#     def process(self, x: float) -> ndarray:
 #         # Do not process NaNs
-#         if np.isnan(x):
+#         if isnan(x):
 #             return x
 #         return self._process(x)
 
-#     def __call__(self, x: float) -> np.ndarray:
+#     def __call__(self, x: float) -> ndarray:
 #         return self.process(x)
 
 #     def _process(self, x):
@@ -26,13 +26,13 @@ class LiveSosFilter:  # (LiveFilter):
     Live implementation of digital filter with second-order sections
     '''
 
-    def __init__(self, sos: np.ndarray) -> None:
+    def __init__(self, sos: ndarray) -> None:
         '''
         Initialize live second-order sections filter
         '''
         self.sos = sos
         self.n_sections = sos.shape[0]
-        self.state = np.zeros((self.n_sections, 2))
+        self.state = zeros((self.n_sections, 2))
 
     def process(self, x: float) -> float:
         '''
@@ -80,24 +80,24 @@ class VectorizedLiveOneSectionSosFilter:
     Live implementation of digital filter with second-order sections, but vectorized and supports only one section
     '''
 
-    def __init__(self, sos: np.ndarray, dim: int = 3) -> None:
+    def __init__(self, sos: ndarray, dim: int = 3) -> None:
         '''
         Initialize live second-order sections filter
 
         Args:
-            sos: np.ndarray
+            sos: ndarray
             dim: int
         '''
 
         self.sos = sos[0]
-        self.state = np.zeros((dim, 2))
+        self.state = zeros((dim, 2))
 
-    def process(self, x: np.ndarray) -> float:
+    def process(self, x: ndarray) -> float:
         '''
         Filter incoming data with cascaded second-order sections
 
         Args:
-            x: np.ndarray of shape (dim, 1)
+            x: ndarray of shape (dim, 1)
         '''
 
         b0, b1, b2, _, a1, a2 = self.sos
@@ -114,12 +114,12 @@ class PureTripleLiveOneSectionSosFilter:
     Live implementation of digital filter with second-order sections, but vectorized and supports only one section
     '''
 
-    def __init__(self, sos: Union[list, np.ndarray]) -> None:
+    def __init__(self, sos: Union[list, ndarray]) -> None:
         '''
         Initialize live second-order sections filter
 
         Args:
-            sos: list | np.ndarray
+            sos: list | ndarray
         '''
 
         self.sos = sos
@@ -127,12 +127,12 @@ class PureTripleLiveOneSectionSosFilter:
         self.s1 = [0, 0]
         self.s2 = [0, 0]
 
-    def process(self, x: Union[list, np.ndarray]) -> float:
+    def process(self, x: Union[list, ndarray]) -> float:
         '''
         Filter incoming data with cascaded second-order sections
 
         Args:
-            x: list | np.ndarray of length 3
+            x: list | ndarray of length 3
         '''
 
         b0, b1, b2, _, a1, a2 = self.sos
@@ -155,31 +155,31 @@ class MultidimensionalLiveSosFilter:
     Multidimensional extension to the LiveSosFilter class
     '''
 
-    def __init__(self, sos: np.ndarray, shape) -> None:
+    def __init__(self, sos: ndarray, shape) -> None:
         if isinstance(shape, int):
             self.filters = [LiveSosFilter(sos) for _ in range(shape)]
         elif isinstance(shape, Union[tuple, list]):
-            self.filters = [LiveSosFilter(sos) for _ in range(np.prod(shape))]
+            self.filters = [LiveSosFilter(sos) for _ in range(prod(shape))]
         else:
             raise ValueError(f'Input shape must be an integer or a tuple or list of integers, not {type(shape)}')
         self.shape = shape
-        self.len = np.prod(shape)
+        self.len = prod(shape)
 
-    def process(self, x: np.ndarray) -> np.ndarray:
-        if not isinstance(x, np.ndarray):
-            x = np.array(x)
-            print('WARNING: input converted to np.ndarray in MultidimensionalLiveSosFilter')
+    def process(self, x: ndarray) -> ndarray:
+        if not isinstance(x, ndarray):
+            x = array(x)
+            print('WARNING: input converted to ndarray in MultidimensionalLiveSosFilter')
 
         if isinstance(self.shape, int):
             if len(x) != self.shape:
                 raise ValueError(f'Invalid input of shape {x.shape} for filter of size {self.shape}')
-            return np.array([self.filters[i].process(x[i]) for i in range(self.shape)])
+            return array([self.filters[i].process(x[i]) for i in range(self.shape)])
 
         if x.shape != self.shape:
             raise ValueError(f'Invalid input of shape {x.shape} for filter of shape {self.shape}')
 
         x = x.reshape(self.len)
-        return np.array([self.filters[i].process(x[i]) for i in range(self.len)]).reshape(self.shape)
+        return array([self.filters[i].process(x[i]) for i in range(self.len)]).reshape(self.shape)
 
 
 class LiveMeanFilter:  # (LiveFilter):

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Union
 from math import sqrt, cos, sin, pi
 
-import numpy as np
+from numpy import ndarray, array, zeros, eye
 from scipy.signal import butter
 from ahrs.filters import EKF, Madgwick
 
@@ -84,11 +84,11 @@ class Nav:
             fc_reduction_factor: float - reduce emissions by this factor for accuracy
         '''
         # Initialize navigation parameters
-        self.v = np.zeros(3)  # Velocity in the vehicle frame
-        self.a = np.zeros(3)  # Acceleration in the vehicle frame (sans gravity)
-        self.v_llf = np.zeros(3)  # Velocity in the local level frame
+        self.v = zeros(3)  # Velocity in the vehicle frame
+        self.a = zeros(3)  # Acceleration in the vehicle frame (sans gravity)
+        self.v_llf = zeros(3)  # Velocity in the local level frame
         self.heading = None  # Heading of the car in degrees clockwise from North
-        self.R_l2v = np.eye(3)
+        self.R_l2v = eye(3)
         # self.average_speed = LiveMeanFilter()
 
         # Initialize the filters for smoothing incomming accel and gyro data
@@ -147,7 +147,7 @@ class Nav:
     @staticmethod
     def _get_ref_field(
         lat: float, long: float, alt: float, return_inclination: bool = False
-    ) -> Union[np.ndarray, float]:
+    ) -> Union[ndarray, float]:
         '''
         Get the reference field from pyCRGI
 
@@ -158,14 +158,14 @@ class Nav:
             return_inclination: bool - If true, return magnetic dip rather than reference field. Default: False
 
         Returns:
-            reference field as a np.ndarray if return_inclination = False else magnetic dip as a float
+            reference field as a ndarray if return_inclination = False else magnetic dip as a float
         '''
         # Compute the year
         now = datetime.now().timetuple()
         year = now.tm_year + now.tm_yday / (365 if now.tm_year % 4 != 0 else 366)
 
         # Get the mag field from the IGRF-13 model
-        mag_field = np.array(get_value(lat, long, alt, year))
+        mag_field = array(get_value(lat, long, alt, year))
 
         if return_inclination:
             return mag_field[1]
@@ -176,15 +176,15 @@ class Nav:
         return ref_field
 
     @staticmethod
-    def _quaternion_to_matrix(q: np.ndarray) -> np.ndarray:
+    def _quaternion_to_matrix(q: ndarray) -> ndarray:
         '''
         Convert a normalized quaternion (in ENGO 623 notation) to a rotation matrix
 
         Args:
-            q: np.ndarray - quaternion of shape (4,)
+            q: ndarray - quaternion of shape (4,)
 
         Returns:
-            np.ndarray of shape (3, 3)
+            ndarray of shape (3, 3)
         '''
         q1, q2, q3, q4 = q
         qq1, qq2, qq3, qq4 = q * q
@@ -196,7 +196,7 @@ class Nav:
         q2q3 = q2 * q3
         qq2mqq3 = qq2 - qq3
         qq4mqq1 = qq4 - qq1
-        return np.array(
+        return array(
             [
                 [qq1 - qq2 - qq3 + qq4, 2 * (q1q2 - q3q4), 2 * (q1q3 + q2q4)],
                 [2 * (q1q2 + q3q4), qq4mqq1 + qq2mqq3, 2 * (q2q3 - q1q4)],
@@ -205,17 +205,17 @@ class Nav:
         )
 
     @staticmethod
-    def _rotate_with_quaternion(q: np.ndarray, v: np.ndarray) -> np.ndarray:
+    def _rotate_with_quaternion(q: ndarray, v: ndarray) -> ndarray:
         '''
         Rotate using the quaternion
         Faster than using the matrix approach
 
         Args:
-            q: np.ndarray - quaternion of shape (4,)
-            v: np.ndarray - vector of shape (3,)
+            q: ndarray - quaternion of shape (4,)
+            v: ndarray - vector of shape (3,)
 
         Returns:
-            np.ndarray - rotated vector of shape (3,)
+            ndarray - rotated vector of shape (3,)
         '''
         q0, q1, q2, q3 = q
         v0, v1, v2 = v
@@ -224,7 +224,7 @@ class Nav:
         b = q3 * q3 - q0 * q0 - q1 * q1 - q2 * q2
         c = 2.0 * q3
 
-        return np.array(
+        return array(
             [
                 a * q0 + b * v0 + c * (q1 * v2 - q2 * v1),
                 a * q1 + b * v1 + c * (q2 * v0 - q0 * v2),
@@ -279,17 +279,17 @@ class Nav:
         return REGRESSION_COEFFICIENTS[4 * edi + speed_index]
 
     def process_imu_update(
-        self, timestamp: float, accel: np.ndarray, accel_no_g: np.ndarray, gyro: np.ndarray, mag: np.ndarray
+        self, timestamp: float, accel: ndarray, accel_no_g: ndarray, gyro: ndarray, mag: ndarray
     ) -> None:
         '''
         Process a measurement from the IMU
 
         Args:
             timestamp: float
-            accel: np.ndarray of shape (3,) - IMU acceleration in m / s ** 2 including gravity
-            accel_no_g: np.ndarray of shape (3,) - IMU acceleration in m / s ** 2 excluding gravity
-            gyro: np.ndarray of shape (3,) - IMU angular velocity in rad / s
-            mag: np.ndarray of shape (3,) - Magnetic field in nT
+            accel: ndarray of shape (3,) - IMU acceleration in m / s ** 2 including gravity
+            accel_no_g: ndarray of shape (3,) - IMU acceleration in m / s ** 2 excluding gravity
+            gyro: ndarray of shape (3,) - IMU angular velocity in rad / s
+            mag: ndarray of shape (3,) - Magnetic field in nT
         '''
         ################################### UPDATE THIS DEPENDING ON TIME UNITS ###################################
         if self.t0 is None:
@@ -305,9 +305,9 @@ class Nav:
         self.prev_timestamp = timestamp
 
         # Smooth the incomming accelerometer and gyro measurements
-        # accel = np.array(self.accel_filter.process(accel))
-        accel_no_g = np.array(self.accel_no_g_filter.process(accel_no_g))
-        # gyro = np.array(self.gyro_filter.process(gyro))
+        # accel = array(self.accel_filter.process(accel))
+        accel_no_g = array(self.accel_no_g_filter.process(accel_no_g))
+        # gyro = array(self.gyro_filter.process(gyro))
         self.latest_raw_imu = [accel, gyro, mag]
 
         # If we have no reference field, we have no orientation
@@ -321,7 +321,7 @@ class Nav:
             self.Q_ahrs = updateMARGFast(self.Q_ahrs, gyr=gyro, acc=accel, mag=mag, dt=timediff)
         elif self.algo == 'ekf':
             self.Q_ahrs = self.ahrs.update(self.Q_ahrs, gyr=gyro, acc=accel, mag=mag)
-        self.Q_s2l = np.array([self.Q_ahrs[1], self.Q_ahrs[2], self.Q_ahrs[3], self.Q_ahrs[0]])
+        self.Q_s2l = array([self.Q_ahrs[1], self.Q_ahrs[2], self.Q_ahrs[3], self.Q_ahrs[0]])
 
         # Compute the updated rotation matrix
         # self.R_s2l = self._quaternion_to_matrix(self.Q_s2l)
@@ -338,7 +338,7 @@ class Nav:
         # Heading vector in the LLF: [sin H, cos H, 0]
         # Need to rotate the y-axis of the local level frame to the align with the heading vector
         sinh, cosh = sin(self.heading * DEG_TO_RAD), cos(self.heading * DEG_TO_RAD)
-        self.R_l2v = np.array([[cosh, -sinh, 0], [sinh, cosh, 0], [0, 0, 1]])
+        self.R_l2v = array([[cosh, -sinh, 0], [sinh, cosh, 0], [0, 0, 1]])
 
         # Rotate the local level frame velocity and acceleration (sans gravity) to the vehicle frame
         self.v = (self.R_l2v @ self.v_llf.reshape((3, 1))).reshape(3)
@@ -399,7 +399,7 @@ class Nav:
                 )
             self.Q_ahrs = self.ahrs.Q[0]
             # Convert to ENGO 623 quaternion convention
-            self.Q_s2l = np.array([self.Q_ahrs[1], self.Q_ahrs[2], self.Q_ahrs[3], self.Q_ahrs[0]])
+            self.Q_s2l = array([self.Q_ahrs[1], self.Q_ahrs[2], self.Q_ahrs[3], self.Q_ahrs[0]])
 
             # Compute the rotation matrix from smartphone to ENU frame
             # self.R_s2l = self._quaternion_to_matrix(self.Q_s2l)
