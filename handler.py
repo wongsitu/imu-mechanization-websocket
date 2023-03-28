@@ -9,9 +9,9 @@ import numpy as np
 import boto3
 from botocore.config import Config
 
-# from nav import Nav
+from nav import Nav
 
-# GRAVITY = 9.80665  # m / s ** 2
+GRAVITY = 9.80665  # m / s ** 2
 
 client = boto3.client(
     'apigatewaymanagementapi',
@@ -43,9 +43,16 @@ def websocket_handler(event, context):
 
         connectionId = event.get('requestContext', {}).get('connectionId')
         message = event.get('body', {})
-        # payload= { 'fuelConsumption': 10, 'co2Emissions': 0, 'n2oEmissions': 0, 'ch4Emissions': 0 }
 
-        payload = {'counter': counter.iterate()}
+        payload = {
+            'fuel': np.random.rand(),
+            'speed': np.random.rand(),
+            'co2': np.random.rand(),
+            'co': np.random.rand(),
+            'nox': np.random.rand(),
+            'unburned_hydrocarbons': np.random.rand(),
+            'particulate': np.random.rand(),
+        }
 
         client.post_to_connection(ConnectionId=connectionId, Data=json.dumps(payload).encode('utf-8'))
         return {'statusCode': 200}
