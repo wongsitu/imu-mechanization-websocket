@@ -14,9 +14,9 @@ import numpy as np
 def websocket_handler(event, context):
     route = event.get('requestContext', {}).get('routeKey')
     if route == '$connect':
-        return {'statusCode': 200}
+        return {'statusCode': 200, 'body': "success"}
     elif route == '$disconnect':
-        return {'statusCode': 200}
+        return {'statusCode': 200, 'body': "disconnect" }
     elif route == '$default':
         message = event.get('body')
         response = {'message': 'Received message: {}'.format(message)}
