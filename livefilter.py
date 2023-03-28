@@ -158,7 +158,7 @@ class MultidimensionalLiveSosFilter:
     def __init__(self, sos: np.ndarray, shape: Union[int, tuple[int]]) -> None:
         if isinstance(shape, int):
             self.filters = [LiveSosFilter(sos) for _ in range(shape)]
-        elif isinstance(shape, tuple | list):
+        elif isinstance(shape, Union[tuple, list]):
             self.filters = [LiveSosFilter(sos) for _ in range(np.prod(shape))]
         else:
             raise ValueError(f'Input shape must be an integer or a tuple or list of integers, not {type(shape)}')
