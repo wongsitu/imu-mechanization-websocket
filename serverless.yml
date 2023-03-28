@@ -24,15 +24,15 @@ functions:
       - websocket:
           route: $default
 
-package:
-  exclude:
-    - node_modules/**
-    - .venv/**
-  include:
-    - 'numpy'
-    - 'scipy'
-    - 'AHRS'
-    - 'geopy'
+# package:
+#   exclude:
+#     - node_modules/**
+#     - .venv/**
+#   include:
+#     - 'numpy'
+#     - 'scipy'
+#     - 'AHRS'
+#     - 'geopy'
 custom:
   pythonRequirements:
     zip: true
