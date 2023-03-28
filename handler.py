@@ -20,12 +20,12 @@ def websocket_handler(event, context):
     elif route == '$disconnect':
         return {'statusCode': 200 }
     elif route == '$default':
-        connectionId = event.get('requestContext', {}).get('connectionId')
-        msg= { 'hello': 'hello' }
-        client.post_to_connection(ConnectionId=connectionId, Data=json.dumps(msg).encode('utf-8'))
-
         message = event.get('body')
-        response = {'message': 'Received message: {}'.format(message)}
+        print(message)
+
+        connectionId = event.get('requestContext', {}).get('connectionId')
+        payload= { 'fuelConsumption': 10, 'co2Emissions': 0, 'n2oEmissions': 0, 'ch4Emissions': 0 }
+        client.post_to_connection(ConnectionId=connectionId, Data=json.dumps(payload).encode('utf-8'))
         return {'statusCode': 200, 'body': json.dumps(response)}
     else:
         return {'statusCode': 400, 'body': 'Unknown WebSocket event'}
