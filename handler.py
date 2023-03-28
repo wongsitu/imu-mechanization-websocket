@@ -11,7 +11,7 @@ import boto3
 
 # GRAVITY = 9.80665  # m / s ** 2
 
-client = boto3.client('apigatewaymanagementapi', endpoint_url="https://98ldqkpb7k.execute-api.us-east-1.amazonaws.com/dev/@connections")
+client = boto3.client('apigatewaymanagementapi', endpoint_url="https://98ldqkpb7k.execute-api.us-east-1.amazonaws.com/dev")
 
 def websocket_handler(event, context):
     route = event.get('requestContext', {}).get('routeKey')
@@ -22,7 +22,7 @@ def websocket_handler(event, context):
     elif route == '$default':
         connectionId = event.get('requestContext', {}).get('connectionId')
         msg= { 'hello': 'hello' }
-        client.post_to_connection(ConnectionId=connectionId, Data=json.dumps(msg))
+        client.post_to_connection(ConnectionId=connectionId, Data=json.dumps(msg).encode('utf-8'))
 
         message = event.get('body')
         response = {'message': 'Received message: {}'.format(message)}
