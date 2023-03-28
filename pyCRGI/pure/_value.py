@@ -15,7 +15,7 @@ def get_value(
     lon: float,
     alt: float,
     year: float,
-) -> tuple[float, float, float, float, float, float, float]:
+):
     """
     Computes magnetic field values at given point in space.
 
@@ -49,7 +49,7 @@ def get_variation(
     lon: float,
     alt: float,
     year: float,
-) -> tuple[float, float, float, float, float, float, float]:
+):
     """
     Computes annual variation of magnetic field values at given point in space.
 

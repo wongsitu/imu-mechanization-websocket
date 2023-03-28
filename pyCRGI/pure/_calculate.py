@@ -14,7 +14,7 @@ FACT = 180.0 / pi
 def geodetic2geocentric(
     theta: float,
     alt: float,
-) -> tuple[float, float, float]:
+):
     """
     Conversion from geodetic to geocentric coordinates by using the WGS84 spheroid.
 
@@ -49,10 +49,10 @@ def geodetic2geocentric(
 def get_syn(
     year: float,
     itype: int,
-    alt: float, # double!
-    lat: float, # double!
-    elong: float, # double!
-) -> tuple[float, float, float, float]: # TODO check 12th gen vs 13th gen synthesis routine
+    alt: float,  # double!
+    lat: float,  # double!
+    elong: float,  # double!
+):  # TODO check 12th gen vs 13th gen synthesis routine
     """
     This is a synthesis routine for the 12th generation IGRF as agreed
     in December 2014 by IAGA Working Group V-MOD. It is valid 1900.0 to
@@ -90,17 +90,20 @@ def get_syn(
         f, total intensity [nT] if isv == 0, [rubbish] if isv == 1
     """
 
-    p, q, cl, sl = [0.] * 105, [0.] * 105, [0.] * 13, [0.] * 13
-    x, y, z = 0., 0., 0.
+    p, q, cl, sl = [0.0] * 105, [0.0] * 105, [0.0] * 13, [0.0] * 13
+    x, y, z = 0.0, 0.0, 0.0
 
     if year < 1900.0 or year > 2030.0:
         f = 1.0
         if DEBUG:
-            warnings.warn((
-                f"This subroutine will not work with a year of {year:f}. "
-                "Date must be in the range 1900.0 <= year <= 2030.0. "
-                "On return f = 1.0, x = y = z = 0"
-            ), RuntimeWarning)
+            warnings.warn(
+                (
+                    f"This subroutine will not work with a year of {year:f}. "
+                    "Date must be in the range 1900.0 <= year <= 2030.0. "
+                    "On return f = 1.0, x = y = z = 0"
+                ),
+                RuntimeWarning,
+            )
         return x, y, z, f
 
     g, h = get_coeffs(year)
@@ -175,7 +178,7 @@ def get_syn(
             two = h[n][m] * rr
             three = one * cl[m - 1] + two * sl[m - 1]
             x = x + three * q[k - 1]
-            z = z - (fn + 1.0) * three * p[k-1]
+            z = z - (fn + 1.0) * three * p[k - 1]
             if st == 0.0:
                 y = y + (one * sl[m - 1] - two * cl[m - 1]) * q[k - 1] * ct
             else:

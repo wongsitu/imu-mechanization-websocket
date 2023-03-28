@@ -80,8 +80,8 @@ for i, t in enumerate(timestamps):
     run_nav(nav, [data])
 
     fuel_use = nav.get_fuel()
-    fuel.append(fuel_use[0])
-    tfuel.append(fuel_use[1])
+    # fuel.append(fuel_use[0])
+    # tfuel.append(fuel_use[1])
 
     emissions = nav.get_emissions()
     # co2.append(emissions['CO2'][0])
@@ -96,8 +96,8 @@ for i, t in enumerate(timestamps):
     # thc.append(emissions['HC'][1])
 
     vel_acc = nav.get_motion()
-    v.append(vel_acc[0])
-    a.append(vel_acc[1])
+    # v.append(vel_acc[0])
+    # a.append(vel_acc[1])
 t1 = time.perf_counter()
 print('EXEC TIME:', t1 - t0, (t1 - t0) / len(timestamps))
 
