@@ -1,17 +1,12 @@
 service: imu-mechanization-websocket
-
 provider:
   name: aws
   runtime: python3.8
-  region: "us-east-1"
-  stage: ${opt:stage, 'dev'}
+  region: us-east-1
 
-  iamRoleStatements:
-    - Effect: "Allow"
-      Action:
-        - "execute-api:ManageConnections"
-      Resource:
-        - "arn:aws:execute-api:us-east-1:028933020796:*/*/POST/@connections/*"
+plugins:
+  - serverless-plugin-lambda-ws
+  - serverless-python-requirements
 
 functions:
   connectionManager:
@@ -23,19 +18,41 @@ functions:
           route: $disconnect
       - websocket:
           route: $default
-
-# package:
-#   exclude:
-#     - node_modules/**
-#     - .venv/**
-#   include:
-#     - 'numpy'
-#     - 'scipy'
-#     - 'AHRS'
-#     - 'geopy'
 custom:
   pythonRequirements:
     zip: true
     dockerizePip: true
-plugins:
-  - serverless-python-requirements
+
+resources:
+  Resources:
+    WebSocketApi:
+      Type: AWS::ApiGatewayV2::Api
+      Properties:
+        Name: imu-mechanization-websocket
+        ProtocolType: WEBSOCKET
+        RouteSelectionExpression: $request.body.action
+    WebSocketIntegration:
+      Type: AWS::ApiGatewayV2::Integration
+      Properties:
+        ApiId: !Ref WebSocketApi
+        IntegrationType: AWS_PROXY
+        IntegrationUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${websocket_handler.Arn}/invocations
+        PayloadFormatVersion: "1.0"
+    WebSocketDeployment:
+      Type: AWS::ApiGatewayV2::Deployment
+      DependsOn: WebSocketIntegration
+      Properties:
+        ApiId: !Ref WebSocketApi
+    WebSocketStage:
+      Type: AWS::ApiGatewayV2::Stage
+      Properties:
+        ApiId: !Ref WebSocketApi
+        DeploymentId: !Ref WebSocketDeployment
+        StageName: prod
+    WebsocketPermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        Action: lambda:InvokeFunction
+        FunctionName: ${self:service}-${self:provider.stage}-websocket_handler
+        Principal: apigateway.amazonaws.com
+        SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/*/$connect"

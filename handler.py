@@ -21,8 +21,6 @@ def websocket_handler(event, context):
         return {'statusCode': 200 }
     elif route == '$default':
         connectionId = event['connectionId']
-        print(connectionId)
-        msg = json.dumps({ "hello": "hello" })
         client.post_to_connection(ConnectionId = connectionId, Data = msg.encode(('utf-8')))
 
         message = event.get('body')
