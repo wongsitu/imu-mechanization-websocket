@@ -1,5 +1,6 @@
 import numpy as np
 from collections import deque
+from typing import Union
 
 
 # class LiveFilter:
@@ -113,7 +114,7 @@ class PureTripleLiveOneSectionSosFilter:
     Live implementation of digital filter with second-order sections, but vectorized and supports only one section
     '''
 
-    def __init__(self, sos: list | np.ndarray) -> None:
+    def __init__(self, sos: Union[list, np.ndarray]) -> None:
         '''
         Initialize live second-order sections filter
 
@@ -126,7 +127,7 @@ class PureTripleLiveOneSectionSosFilter:
         self.s1 = [0, 0]
         self.s2 = [0, 0]
 
-    def process(self, x: list | np.ndarray) -> float:
+    def process(self, x: Union[list, np.ndarray]) -> float:
         '''
         Filter incoming data with cascaded second-order sections
 
@@ -154,7 +155,7 @@ class MultidimensionalLiveSosFilter:
     Multidimensional extension to the LiveSosFilter class
     '''
 
-    def __init__(self, sos: np.ndarray, shape: int | tuple[int]) -> None:
+    def __init__(self, sos: np.ndarray, shape: Union[int, tuple[int]]) -> None:
         if isinstance(shape, int):
             self.filters = [LiveSosFilter(sos) for _ in range(shape)]
         elif isinstance(shape, tuple | list):
@@ -186,7 +187,7 @@ class LiveMeanFilter:  # (LiveFilter):
     Efficient moving average filter
     '''
 
-    def __init__(self, n: int | None = None) -> None:
+    def __init__(self, n: Union[int, None] = None) -> None:
         '''
         Args:
             n: int | None - Filter computes the mean of the n most recent values.
