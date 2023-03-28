@@ -142,3 +142,6 @@ def end_nav():
     trip_metrics = nav.get_trip_metrics()
     del nav
     return trip_metrics
+
+def nav_light(t_prev, t_curr, lat, long, alt_prev, alt_curr, v_prev):
+    pass

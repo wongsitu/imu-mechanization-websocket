@@ -5,7 +5,8 @@ from math import sqrt, cos, sin, pi
 import numpy as np
 from scipy.signal import butter
 from ahrs.filters import EKF, Madgwick
-from geopy.distance import geodesic
+
+# from geopy.distance import geodesic
 
 from livefilter import PureLiveSosFilter, LiveMeanFilter, PureTripleLiveOneSectionSosFilter
 from pyCRGI.pure import get_value
@@ -106,8 +107,8 @@ class Nav:
         self.prev_alt = None
         self.v_z_filter = LiveMeanFilter(vz_depth)
         self.prev_alt_timestamp = None
-        self.total_distance = 0
-        self.prev_lat_long = None
+        # self.total_distance = 0
+        # self.prev_lat_long = None
 
         # Initialize parameters for the AHRS algorithm
         self.ahrs = None  # AHRS algorithm
@@ -423,12 +424,12 @@ class Nav:
         if alt is not None or speed is not None:
             self.v_llf = (self.R_l2v.T @ self.v.reshape((3, 1))).reshape(3)
 
-        # Update the total distance travelled
-        if self.prev_lat_long is None:
-            self.prev_lat_long = (lat, long)
-        else:
-            self.total_distance += geodesic((lat, long), self.prev_lat_long).meters
-            self.prev_lat_long = (lat, long)
+        # # Update the total distance travelled
+        # if self.prev_lat_long is None:
+        #     self.prev_lat_long = (lat, long)
+        # else:
+        #     self.total_distance += geodesic((lat, long), self.prev_lat_long).meters
+        #     self.prev_lat_long = (lat, long)
 
     def get_motion(self, speed_only=False) -> dict:
         '''
@@ -582,4 +583,5 @@ class Nav:
         else:
             elapsed_time = self.prev_timestamp + self.period - self.t0
 
-        return self.total_distance, elapsed_time
+        # return self.total_distance, elapsed_time
+        return elapsed_time
