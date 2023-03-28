@@ -7,18 +7,34 @@ except ImportError:
 import json
 import numpy as np
 import boto3
+
 # from nav import Nav
 
 # GRAVITY = 9.80665  # m / s ** 2
 
-client = boto3.client('apigatewaymanagementapi', endpoint_url="https://98ldqkpb7k.execute-api.us-east-1.amazonaws.com/dev")
+client = boto3.client(
+    'apigatewaymanagementapi', endpoint_url="https://98ldqkpb7k.execute-api.us-east-1.amazonaws.com/dev"
+)
+
+
+class Counter:
+    def __init__(self) -> None:
+        self.count = 0
+
+    def iterate(self):
+        self.count += 1
+        return self.count
+
+
+counter = Counter()
+
 
 def websocket_handler(event, context):
     route = event.get('requestContext', {}).get('routeKey')
     if route == '$connect':
-        return {'statusCode': 200 }
+        return {'statusCode': 200}
     elif route == '$disconnect':
-        return {'statusCode': 200 }
+        return {'statusCode': 200}
     elif route == '$default':
         message = event.get('body', {})
 
@@ -26,8 +42,10 @@ def websocket_handler(event, context):
         message = event.get('body', {})
         # payload= { 'fuelConsumption': 10, 'co2Emissions': 0, 'n2oEmissions': 0, 'ch4Emissions': 0 }
 
-        client.post_to_connection(ConnectionId=connectionId, Data=json.dumps(message).encode('utf-8'))
-        return {'statusCode': 200 }
+        payload = {'counter': counter.iterate()}
+
+        client.post_to_connection(ConnectionId=connectionId, Data=json.dumps(payload).encode('utf-8'))
+        return {'statusCode': 200}
     else:
         return {'statusCode': 400, 'body': 'Unknown WebSocket event'}
 
@@ -65,8 +83,7 @@ def run_nav(batch):
         t, ax, ay, az, ax_nog, ay_nog, az_nog, gx, gy, gz, mx, my, mz, lat, long, alt, heading, speed = data
 
         acc = np.array([ax * GRAVITY, ay * GRAVITY, az * GRAVITY])
-        acc_nog = np.array(
-            [ax_nog * GRAVITY, ay_nog * GRAVITY, az_nog * GRAVITY])
+        acc_nog = np.array([ax_nog * GRAVITY, ay_nog * GRAVITY, az_nog * GRAVITY])
         gyr = np.array([gx, gy, gz])
         mag = np.array([mx, my, mz])
 
