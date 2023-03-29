@@ -145,9 +145,7 @@ class Nav:
         self.fc_reduction_factor = fc_reduction_factor
 
     @staticmethod
-    def _get_ref_field(
-        lat: float, long: float, alt: float, return_inclination: bool = False
-    ) -> Union[ndarray, float]:
+    def _get_ref_field(lat: float, long: float, alt: float, return_inclination: bool = False) -> Union[ndarray, float]:
         '''
         Get the reference field from pyCRGI
 
@@ -337,8 +335,9 @@ class Nav:
         # Use heading to rotate the local level frame velocity to the vehicle frame velocity
         # Heading vector in the LLF: [sin H, cos H, 0]
         # Need to rotate the y-axis of the local level frame to the align with the heading vector
-        sinh, cosh = sin(self.heading * DEG_TO_RAD), cos(self.heading * DEG_TO_RAD)
-        self.R_l2v = array([[cosh, -sinh, 0], [sinh, cosh, 0], [0, 0, 1]])
+        if self.heading is not None:
+            sinh, cosh = sin(self.heading * DEG_TO_RAD), cos(self.heading * DEG_TO_RAD)
+            self.R_l2v = array([[cosh, -sinh, 0], [sinh, cosh, 0], [0, 0, 1]])
 
         # Rotate the local level frame velocity and acceleration (sans gravity) to the vehicle frame
         self.v = (self.R_l2v @ self.v_llf.reshape((3, 1))).reshape(3)
