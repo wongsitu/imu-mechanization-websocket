@@ -72,11 +72,11 @@ def websocket_handler(event, context):
         )  ## Units arbitrary (nT)
 
         loc = [
-            message['location']['latitude'],
-            message['location']['longitude'],
-            message['location']['altitude'],
-            message['location']['heading'] if message['location']['heading'] > 0 else None,
-            message['location']['speed'] if message['location']['speed'] > 0 else None,
+            message['location']['coords']['latitude'],
+            message['location']['coords']['longitude'],
+            message['location']['coords']['altitude'],
+            message['location']['coords']['heading'] if message['location']['coords']['heading'] > 0 else None,
+            message['location']['coords']['speed'] if message['location']['coords']['speed'] > 0 else None,
         ]
 
         payload = run_nav(
