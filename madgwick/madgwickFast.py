@@ -120,6 +120,7 @@ def updateMARGFast(q: ndarray, gyr: ndarray, acc: ndarray, mag: ndarray, dt: flo
         return q
     if mag is None:
         return updateIMUFast(q, gyr, acc, dt=dt)
+    print(q, gyr)
     qDot = 0.5 * q_prod(q, [0, *gyr])  # (eq. 12)
 
     a = acc / norm3(acc)
