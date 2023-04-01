@@ -292,7 +292,6 @@ class Nav:
             gyro: ndarray of shape (3,) - IMU angular velocity in rad / s
             mag: ndarray of shape (3,) - Magnetic field in nT
         '''
-        ################################### UPDATE THIS DEPENDING ON TIME UNITS ###################################
         if self.t0 is None:
             self.t0 = timestamp
 
@@ -452,11 +451,9 @@ class Nav:
         Returns:
             dict - most recent velocity and acceleration in the vehicle frame
         '''
-        return {'speed': 0}
-
-        # if speed_only:
-        #     return {'speed': sqrt(self.v[1] ** 2 + self.v[2] ** 2)}
-        # return {'velocity': self.v, 'acceleration': self.a}
+        if speed_only:
+            return {'speed': sqrt(self.v[1] ** 2 + self.v[2] ** 2)}
+        return {'velocity': self.v, 'acceleration': self.a}
 
     def set_vehicle_params(
         self,
@@ -528,6 +525,8 @@ class Nav:
         Returns:
             dict: Current fuel usage in mL / s and total fuel usage in L
         '''
+        assert isinstance(self.current_fc, Union[float, int]), 'ERROR: Current FC is not an int or float'
+
         if return_totals:
             return {'fuel_current': self.current_fc, 'fuel_total': self.total_fc}
         return {'fuel_current': self.current_fc}
@@ -556,21 +555,15 @@ class Nav:
         particulate_current = EMISSIONS_TO_PARTICULATE * emissions_current
         hc_current = EMISSIONS_TO_HC * emissions_current
 
-        # emissions = {
-        #     'co2_current': co2_current,
-        #     'co_current': co_current,
-        #     'nox_current': nox_current,
-        #     'particulate_current': particulate_current,
-        #     'unburned_hc_current': hc_current,
-        # }
-
         emissions = {
-            'co2_current': 0,
-            'co_current': 0,
-            'nox_current': 0,
-            'particulate_current': 0,
-            'unburned_hc_current': 0,
+            'co2_current': co2_current,
+            'co_current': co_current,
+            'nox_current': nox_current,
+            'particulate_current': particulate_current,
+            'unburned_hc_current': hc_current,
         }
+
+        assert all(isinstance(x, Union[float, int]) for x in emissions.values()), 'ERROR: Emissions computed as null'
 
         if not return_totals:
             return emissions
@@ -582,12 +575,15 @@ class Nav:
         particulate_total = EMISSIONS_TO_PARTICULATE * emissions_total
         hc_total = EMISSIONS_TO_HC * emissions_total
 
-        return emissions | {
-            'co2_total': co2_total,
-            'co_total': co_total,
-            'nox_total': nox_total,
-            'particulate_total': particulate_total,
-            'unburned_hc_total': hc_total,
+        return {
+            **emissions
+            ** {
+                'co2_total': co2_total,
+                'co_total': co_total,
+                'nox_total': nox_total,
+                'particulate_total': particulate_total,
+                'unburned_hc_total': hc_total,
+            }
         }
 
     def get_trip_metrics(self):
@@ -597,7 +593,6 @@ class Nav:
         Returns:
             tuple[float] - total distance travelled in meters and elapsed time in seconds
         '''
-        ################################### UPDATE THIS DEPENDING ON TIME UNITS ###################################
         if self.prev_timestamp is None:
             elapsed_time = 0
         else:
