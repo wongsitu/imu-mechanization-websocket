@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Union
-from math import sqrt, cos, sin, pi
+from math import sqrt, cos, sin, pi, isnan
 
 from numpy import ndarray, array, zeros, eye
 from scipy.signal import butter
@@ -449,7 +449,7 @@ class Nav:
         '''
         if speed_only:
             speed = sqrt(self.v[1] ** 2 + self.v[2] ** 2)
-            assert isinstance(speed, (float, int)), 'ERROR: Speed is not a float'
+            assert isinstance(speed, (float, int)) and not isnan(speed), 'ERROR: Speed is not a float'
             return {'speed': speed}
         return {'velocity': self.v, 'acceleration': self.a}
 
@@ -523,10 +523,14 @@ class Nav:
         Returns:
             dict: Current fuel usage in mL / s and total fuel usage in L
         '''
-        assert isinstance(self.current_fc, (float, int)), 'ERROR: Current FC is not an int or float'
+        assert isinstance(self.current_fc, (float, int)) and not isnan(
+            self.current_fc
+        ), 'ERROR: Current FC is not an int or float'
 
         if return_totals:
-            assert isinstance(self.total_fc, (float, int)), 'ERROR: Total FC is not an int or float'
+            assert isinstance(self.total_fc, (float, int)) and not isnan(
+                self.total_fc
+            ), 'ERROR: Total FC is not an int or float'
             return {'fuel_current': self.current_fc, 'fuel_total': self.total_fc}
         return {'fuel_current': self.current_fc}
 
@@ -562,7 +566,9 @@ class Nav:
             'unburned_hc_current': hc_current,
         }
 
-        assert all(isinstance(x, (float, int)) for x in emissions.values()), 'ERROR: Emissions computed as null'
+        assert all(
+            isinstance(x, (float, int)) and not isnan(x) for x in emissions.values()
+        ), 'ERROR: Emissions computed as null'
 
         if not return_totals:
             return emissions
