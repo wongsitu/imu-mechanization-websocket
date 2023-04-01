@@ -10,7 +10,7 @@ from ahrs.filters import EKF, Madgwick
 
 from livefilter import PureLiveSosFilter, LiveMeanFilter, PureTripleLiveOneSectionSosFilter
 from pyCRGI.pure import get_value
-from madgwick.madgwickFast import norm3, updateMARGFast
+from madgwick.madgwickFast import updateMARGFast
 
 
 GRAVITY = 9.80665  # m / s ** 2
