@@ -26,6 +26,7 @@ EMISSIONS_TO_PARTICULATE = 0.0005  # proportion of particulate matter produced
 EMISSIONS_TO_HC = 0.019  # proportion of unburned hydrocarbons produced
 
 EPS = 1e-12
+GPS_REFRESH_TIME = 0.75  # seconds
 
 # Data obtained from https://doi.org/10.3390/en6010117, tables 5, 6
 REGRESSION_COEFFICIENTS = (
@@ -386,7 +387,7 @@ class Nav:
             None
         '''
         # Return if there is no GPS update and a second has not passed
-        if self.prev_lat_long == (lat, long) and timestamp - self.gps_time < 1:
+        if self.prev_lat_long == (lat, long) and timestamp - self.gps_time < GPS_REFRESH_TIME:
             return
         self.gps_time = timestamp
 
