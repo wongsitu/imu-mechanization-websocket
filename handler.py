@@ -126,6 +126,8 @@ def run_nav(t, acc, acc_nog, gyro, mag, loc):
     emissions = nav.get_emissions(return_totals=False)
     speed = nav.get_motion(speed_only=True)
 
+    print("RETURNED PAYLOAD: ", {**fuel, **emissions, **speed})
+
     return {**fuel, **emissions, **speed}
 
 
@@ -134,7 +136,3 @@ def end_nav():
     trip_metrics = nav.get_trip_metrics()
     del nav
     return trip_metrics
-
-
-# def nav_light(t_prev, t, vy_prev, vy, vz_prev, alt_prev, alt):
-#     tdiff = t - t_prev
