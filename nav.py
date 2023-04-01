@@ -573,14 +573,14 @@ class Nav:
         hc_total = EMISSIONS_TO_HC * emissions_total
 
         return {
-            **emissions
-            ** {
+            **emissions,
+            **{
                 'co2_total': co2_total,
                 'co_total': co_total,
                 'nox_total': nox_total,
                 'particulate_total': particulate_total,
                 'unburned_hc_total': hc_total,
-            }
+            },
         }
 
     def get_trip_metrics(self):
