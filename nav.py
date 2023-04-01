@@ -435,7 +435,7 @@ class Nav:
 
         self.prev_lat_long = (lat, long)
 
-    def get_motion(self, speed_only=False) -> dict:
+    def get_motion(self, speed_only=True) -> dict:
         '''
         Get the current velocity and acceleration
 
