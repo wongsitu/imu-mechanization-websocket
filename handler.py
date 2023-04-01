@@ -72,7 +72,7 @@ def websocket_handler(event, context):
             message['location']['coords']['longitude'],  # deg
             message['location']['coords']['altitude'],  # meters
             message['location']['coords']['heading'] if message['location']['coords']['heading'] >= 0 else None,  # deg
-            message['location']['coords']['speed'] if message['location']['coords']['speed'] >= 0 else None,  # m / s
+            max(message['location']['coords']['speed'], 0),  # m / s
         ]
 
         print('run_nav input:', message['time'] / 1000, acc, acc_nog, gyro, mag, loc)
@@ -124,8 +124,7 @@ def run_nav(t, acc, acc_nog, gyro, mag, loc):
         return
 
     nav.process_imu_update(t, acc, acc_nog, gyro, mag)
-    if loc[0] is not None:
-        nav.process_gps_update(t, *loc)
+    nav.process_gps_update(t, *loc)
 
     fuel = nav.get_fuel(return_totals=False)
     emissions = nav.get_emissions(return_totals=False)
