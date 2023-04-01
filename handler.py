@@ -85,6 +85,7 @@ def websocket_handler(event, context):
             print(e)
             payload = {**nav.get_motion(speed_only=True), **nav.get_emissions(), **nav.get_fuel()}
 
+        print("RETURNED PAYLOAD: ", payload)
         client.post_to_connection(ConnectionId=connectionId, Data=json.dumps(payload).encode('utf-8'))
         return {'statusCode': 200}
     else:
@@ -127,8 +128,6 @@ def run_nav(t, acc, acc_nog, gyro, mag, loc):
     fuel = nav.get_fuel(return_totals=False)
     emissions = nav.get_emissions(return_totals=False)
     speed = nav.get_motion(speed_only=True)
-
-    print("RETURNED PAYLOAD: ", {**fuel, **emissions, **speed})
 
     return {**fuel, **emissions, **speed}
 
