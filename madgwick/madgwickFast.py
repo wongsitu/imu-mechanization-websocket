@@ -39,8 +39,6 @@ References
 from numpy import ndarray, array, zeros
 from math import sqrt
 
-import numpy as np
-
 
 def updateIMUFast(q: ndarray, gyr: ndarray, acc: ndarray, dt: float = 0.01) -> ndarray:
     """
@@ -190,9 +188,6 @@ def updateMARGFast(q: ndarray, gyr: ndarray, acc: ndarray, mag: ndarray, dt: flo
 
     q += qDot * dt  # (eq. 13)
     q /= norm4(q)
-
-    if any(np.isnan(q)) or any(x is None for x in q):
-        raise RuntimeError(f'QUATERNION NAN: {q}')
     return q / norm4(q)
 
 
