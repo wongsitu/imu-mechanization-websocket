@@ -446,7 +446,9 @@ class Nav:
             dict - most recent velocity and acceleration in the vehicle frame
         '''
         if speed_only:
-            return {'speed': sqrt(self.v[1] ** 2 + self.v[2] ** 2)}
+            speed = sqrt(self.v[1] ** 2 + self.v[2] ** 2)
+            assert isinstance(speed, (float, int)), 'ERROR: Speed is not a float'
+            return {'speed': speed}
         return {'velocity': self.v, 'acceleration': self.a}
 
     def set_vehicle_params(
@@ -519,9 +521,10 @@ class Nav:
         Returns:
             dict: Current fuel usage in mL / s and total fuel usage in L
         '''
-        # assert isinstance(self.current_fc, (float, int)), 'ERROR: Current FC is not an int or float'
+        assert isinstance(self.current_fc, (float, int)), 'ERROR: Current FC is not an int or float'
 
         if return_totals:
+            assert isinstance(self.total_fc, (float, int)), 'ERROR: Total FC is not an int or float'
             return {'fuel_current': self.current_fc, 'fuel_total': self.total_fc}
         return {'fuel_current': self.current_fc}
 
@@ -557,7 +560,7 @@ class Nav:
             'unburned_hc_current': hc_current,
         }
 
-        # assert all(isinstance(x, (float, int)) for x in emissions.values()), 'ERROR: Emissions computed as null'
+        assert all(isinstance(x, (float, int)) for x in emissions.values()), 'ERROR: Emissions computed as null'
 
         if not return_totals:
             return emissions
