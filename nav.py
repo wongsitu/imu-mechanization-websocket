@@ -10,7 +10,7 @@ from ahrs.filters import EKF, Madgwick
 
 from livefilter import PureLiveSosFilter, LiveMeanFilter, PureTripleLiveOneSectionSosFilter
 from pyCRGI.pure import get_value
-from madgwick.madgwickFast import updateMARGFast
+from madgwick.madgwickFast import norm3, updateMARGFast
 
 
 GRAVITY = 9.80665  # m / s ** 2
@@ -24,6 +24,8 @@ EMISSIONS_TO_CO = 0.01  # proportion of CO produced
 EMISSIONS_TO_NOX = 0.021  # proportion of nitrous oxides produced
 EMISSIONS_TO_PARTICULATE = 0.0005  # proportion of particulate matter produced
 EMISSIONS_TO_HC = 0.019  # proportion of unburned hydrocarbons produced
+
+EPS = 1e-12
 
 # Data obtained from https://doi.org/10.3390/en6010117, tables 5, 6
 REGRESSION_COEFFICIENTS = (
@@ -144,6 +146,10 @@ class Nav:
         self.fc_filter = PureLiveSosFilter(sos) if smooth_fc else None
         self.imu_damping = imu_damping
         self.fc_reduction_factor = fc_reduction_factor
+
+    @staticmethod
+    def normsq3(x):
+        return x[0] * x[0] + x[1] * x[1] + x[2] * x[2]
 
     @staticmethod
     def _get_ref_field(lat: float, long: float, alt: float, return_inclination: bool = False) -> Union[ndarray, float]:
@@ -291,6 +297,12 @@ class Nav:
             mag: ndarray of shape (3,) - Magnetic field in nT
         '''
 
+        if any(
+            x < EPS for x in (self.normsq3(accel), self.normsq3(accel_no_g), self.normsq3(gyro), self.normsq3(mag))
+        ):
+            print('WARNING: Received zero values in process_imu_update. Returning.')
+            return
+
         assert not npisnan(accel).any(), 'ERROR: accel value is NaN in process_imu_update'
         assert not npisnan(accel_no_g).any(), 'ERROR: accel_no_gravity value is NaN in process_imu_update'
         assert not npisnan(gyro).any(), 'ERROR: gyro value is NaN in process_imu_update'
@@ -325,7 +337,7 @@ class Nav:
             self.Q_ahrs = updateMARGFast(self.Q_ahrs, gyr=gyro, acc=accel, mag=mag, dt=timediff)
         elif self.algo == 'ekf':
             self.Q_ahrs = self.ahrs.update(self.Q_ahrs, gyr=gyro, acc=accel, mag=mag)
-            assert not npisnan(self.Q_ahrs).any(), 'ERROR: self.Q_ahrs has NaN values in process_imu_update'
+        assert not npisnan(self.Q_ahrs).any(), 'ERROR: self.Q_ahrs has NaN values in process_imu_update'
         self.Q_s2l = array([self.Q_ahrs[1], self.Q_ahrs[2], self.Q_ahrs[3], self.Q_ahrs[0]])
 
         # Compute the updated rotation matrix
