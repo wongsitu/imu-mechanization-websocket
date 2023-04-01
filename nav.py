@@ -452,6 +452,7 @@ class Nav:
         Returns:
             dict - most recent velocity and acceleration in the vehicle frame
         '''
+        return {'speed': 0}
 
         if speed_only:
             return {'speed': sqrt(self.v[1] ** 2 + self.v[2] ** 2)}
@@ -555,12 +556,20 @@ class Nav:
         particulate_current = EMISSIONS_TO_PARTICULATE * emissions_current
         hc_current = EMISSIONS_TO_HC * emissions_current
 
+        # emissions = {
+        #     'co2_current': co2_current,
+        #     'co_current': co_current,
+        #     'nox_current': nox_current,
+        #     'particulate_current': particulate_current,
+        #     'unburned_hc_current': hc_current,
+        # }
+
         emissions = {
-            'co2_current': co2_current,
-            'co_current': co_current,
-            'nox_current': nox_current,
-            'particulate_current': particulate_current,
-            'unburned_hc_current': hc_current,
+            'co2_current': 0,
+            'co_current': 0,
+            'nox_current': 0,
+            'particulate_current': 0,
+            'unburned_hc_current': 0,
         }
 
         if not return_totals:
