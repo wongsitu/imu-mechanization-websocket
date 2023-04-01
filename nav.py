@@ -400,7 +400,7 @@ class Nav:
                     frequency=1 / self.period,
                 )
             self.Q_ahrs = self.ahrs.Q[0]
-            if any(q == None for q in self.Q_ahrs) or any(np.isnan(self.Q_ahrs)):
+            if any(q is None for q in self.Q_ahrs) or any(np.isnan(self.Q_ahrs)):
                 raise RuntimeError(f'QUATERNION INITIALIZED NAN: {self.Q_ahrs}')
             # Convert to ENGO 623 quaternion convention
             self.Q_s2l = array([self.Q_ahrs[1], self.Q_ahrs[2], self.Q_ahrs[3], self.Q_ahrs[0]])
