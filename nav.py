@@ -519,7 +519,7 @@ class Nav:
         Returns:
             dict: Current fuel usage in mL / s and total fuel usage in L
         '''
-        # assert isinstance(self.current_fc, Union[float, int]), 'ERROR: Current FC is not an int or float'
+        # assert isinstance(self.current_fc, (float, int)), 'ERROR: Current FC is not an int or float'
 
         if return_totals:
             return {'fuel_current': self.current_fc, 'fuel_total': self.total_fc}
@@ -557,7 +557,7 @@ class Nav:
             'unburned_hc_current': hc_current,
         }
 
-        # assert all(isinstance(x, Union[float, int]) for x in emissions.values()), 'ERROR: Emissions computed as null'
+        # assert all(isinstance(x, (float, int)) for x in emissions.values()), 'ERROR: Emissions computed as null'
 
         if not return_totals:
             return emissions
