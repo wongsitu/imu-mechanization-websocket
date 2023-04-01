@@ -19,7 +19,7 @@ mag = pd.read_csv(os.path.join(datafile, 'Magnetometer.csv'))
 gps = pd.read_csv(os.path.join(datafile, 'Location.csv'))
 
 start = 0
-min_len = min(len(acc), len(acc_nog), len(gyr), len(mag), start + 100000000)
+min_len = min(len(acc), len(acc_nog), len(gyr), len(mag), start + 10000)
 timestamps = acc.seconds_elapsed.to_numpy()[start:min_len]
 acc = acc[['x', 'y', 'z']].to_numpy()[start:min_len]
 acc_nog = acc_nog[['x', 'y', 'z']].to_numpy()[start:min_len]
