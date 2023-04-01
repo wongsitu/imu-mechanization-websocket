@@ -9,9 +9,15 @@ import boto3
 from botocore.config import Config
 
 from nav import Nav
+from livefilter import PureLiveSosFilter
+from scipy.signal import butter
 
 # GRAVITY = 9.80665  # m / s ** 2
 DEG_TO_RAD = pi / 180
+
+# Speed smoother
+sos = butter(2, 0.05, output='sos', fs=None, btype='lowpass')[0]
+speed_filter = PureLiveSosFilter(sos)
 
 client = boto3.client(
     'apigatewaymanagementapi',
@@ -129,6 +135,8 @@ def run_nav(t, acc, acc_nog, gyro, mag, loc):
     fuel = nav.get_fuel(return_totals=False)
     emissions = nav.get_emissions(return_totals=False)
     speed = nav.get_motion(speed_only=True)
+
+    speed['speed'] = speed_filter.process(speed['speed'])
 
     return {**fuel, **emissions, **speed}
 
