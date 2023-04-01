@@ -83,9 +83,10 @@ def websocket_handler(event, context):
             )  # Convert time from ms to s
             print("RETURNED PAYLOAD: ", payload)
             client.post_to_connection(ConnectionId=connectionId, Data=json.dumps(payload).encode('utf-8'))
-        except:# Exception as e:
+        except:  # Exception as e:
             # print(e)
             payload = {**nav.get_motion(speed_only=True), **nav.get_emissions(), **nav.get_fuel()}
+            print("RETURNED PAYLOAD: ", payload)
             client.post_to_connection(ConnectionId=connectionId, Data=json.dumps(payload).encode('utf-8'))
 
         return {'statusCode': 200}
