@@ -13,6 +13,9 @@ from pyCRGI.pure import get_value
 from madgwick.madgwickFast import updateMARGFast
 
 
+import numpy as np
+
+
 GRAVITY = 9.80665  # m / s ** 2
 AIR_DENSITY = 1.225  # density at STP in kg / m ** 3
 DRAG_CONVERSION = 0.07803855  # frontal area in drag is in units of 0.84 ft ** 2 - this converts to m ** 2
@@ -397,6 +400,8 @@ class Nav:
                     frequency=1 / self.period,
                 )
             self.Q_ahrs = self.ahrs.Q[0]
+            if any(q == None for q in self.Q_ahrs) or any(np.isnan(self.Q_ahrs)):
+                raise RuntimeError(f'QUATERNION INITIALIZED NAN: {self.Q_ahrs}')
             # Convert to ENGO 623 quaternion convention
             self.Q_s2l = array([self.Q_ahrs[1], self.Q_ahrs[2], self.Q_ahrs[3], self.Q_ahrs[0]])
 
