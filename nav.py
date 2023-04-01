@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import Union
-from math import sqrt, cos, sin, pi
+from math import sqrt, cos, sin, pi, isnan
 
-from numpy import ndarray, array, zeros, eye
+from numpy import ndarray, array, zeros, eye, isnan as npisnan
 from scipy.signal import butter
 from ahrs.filters import EKF, Madgwick
 
@@ -290,6 +290,12 @@ class Nav:
             gyro: ndarray of shape (3,) - IMU angular velocity in rad / s
             mag: ndarray of shape (3,) - Magnetic field in nT
         '''
+
+        assert not npisnan(accel).any(), 'ERROR: accel value is NaN in process_imu_update'
+        assert not npisnan(accel_no_g).any(), 'ERROR: accel_no_gravity value is NaN in process_imu_update'
+        assert not npisnan(gyro).any(), 'ERROR: gyro value is NaN in process_imu_update'
+        assert not npisnan(mag).any(), 'ERROR: mag value is NaN in process_imu_update'
+
         if self.t0 is None:
             self.t0 = timestamp
 
@@ -319,6 +325,7 @@ class Nav:
             self.Q_ahrs = updateMARGFast(self.Q_ahrs, gyr=gyro, acc=accel, mag=mag, dt=timediff)
         elif self.algo == 'ekf':
             self.Q_ahrs = self.ahrs.update(self.Q_ahrs, gyr=gyro, acc=accel, mag=mag)
+            assert not npisnan(self.Q_ahrs).any(), 'ERROR: self.Q_ahrs has NaN values in process_imu_update'
         self.Q_s2l = array([self.Q_ahrs[1], self.Q_ahrs[2], self.Q_ahrs[3], self.Q_ahrs[0]])
 
         # Compute the updated rotation matrix
@@ -398,6 +405,7 @@ class Nav:
                     frequency=1 / self.period,
                 )
             self.Q_ahrs = self.ahrs.Q[0]
+            assert not npisnan(self.Q_ahrs).any(), 'ERROR: self.Q_ahrs has NaN values in process_gps_update'
             # Convert to ENGO 623 quaternion convention
             self.Q_s2l = array([self.Q_ahrs[1], self.Q_ahrs[2], self.Q_ahrs[3], self.Q_ahrs[0]])
 
@@ -449,7 +457,7 @@ class Nav:
         '''
         if speed_only:
             speed = sqrt(self.v[1] ** 2 + self.v[2] ** 2)
-            assert isinstance(speed, (float, int)), 'ERROR: Speed is not a float'
+            assert isinstance(speed, (float, int)) and not isnan(speed), 'ERROR: Speed is not a float'
             return {'speed': speed}
         return {'velocity': self.v, 'acceleration': self.a}
 
@@ -523,10 +531,14 @@ class Nav:
         Returns:
             dict: Current fuel usage in mL / s and total fuel usage in L
         '''
-        assert isinstance(self.current_fc, (float, int)), 'ERROR: Current FC is not an int or float'
+        assert isinstance(self.current_fc, (float, int)) and not isnan(
+            self.current_fc
+        ), 'ERROR: Current FC is not an int or float'
 
         if return_totals:
-            assert isinstance(self.total_fc, (float, int)), 'ERROR: Total FC is not an int or float'
+            assert isinstance(self.total_fc, (float, int)) and not isnan(
+                self.total_fc
+            ), 'ERROR: Total FC is not an int or float'
             return {'fuel_current': self.current_fc, 'fuel_total': self.total_fc}
         return {'fuel_current': self.current_fc}
 
@@ -562,7 +574,9 @@ class Nav:
             'unburned_hc_current': hc_current,
         }
 
-        assert all(isinstance(x, (float, int)) for x in emissions.values()), 'ERROR: Emissions computed as null'
+        assert all(
+            isinstance(x, (float, int)) and not isnan(x) for x in emissions.values()
+        ), 'ERROR: Emissions computed as null'
 
         if not return_totals:
             return emissions
