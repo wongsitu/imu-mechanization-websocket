@@ -454,9 +454,9 @@ class Nav:
         '''
         return {'speed': 0}
 
-        if speed_only:
-            return {'speed': sqrt(self.v[1] ** 2 + self.v[2] ** 2)}
-        return {'velocity': self.v, 'acceleration': self.a}
+        # if speed_only:
+        #     return {'speed': sqrt(self.v[1] ** 2 + self.v[2] ** 2)}
+        # return {'velocity': self.v, 'acceleration': self.a}
 
     def set_vehicle_params(
         self,
