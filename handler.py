@@ -28,9 +28,7 @@ client = boto3.client(
 
 def websocket_handler(event, context):
     route = event.get('requestContext', {}).get('routeKey')
-    if route == '$connect':
-        return {'statusCode': 200}
-    elif route == '$disconnect':
+    if route == '$connect' or route == '$disconnect':
         return {'statusCode': 200}
     elif route == '$default':
         connectionId = event.get('requestContext', {}).get('connectionId')
