@@ -26,7 +26,7 @@ EMISSIONS_TO_PARTICULATE = 0.0005  # proportion of particulate matter produced
 EMISSIONS_TO_HC = 0.019  # proportion of unburned hydrocarbons produced
 
 EPS = 1e-12
-GPS_REFRESH_TIME = 0.75  # seconds
+GPS_REFRESH_TIME = 1.2  # seconds
 
 # Data obtained from https://doi.org/10.3390/en6010117, tables 5, 6
 REGRESSION_COEFFICIENTS = (
