@@ -31,8 +31,6 @@ def websocket_handler(event, context):
         message = event.get('body', {})
         message = json.loads(message)
 
-        print(message)
-
         if 'nav' not in globals():
             drag = message['drag'] if message['drag'] > 1e-8 else None
             set_nav(message['displacement'], message['isSupercharged'], drag)
@@ -70,12 +68,14 @@ def websocket_handler(event, context):
         )  ## Units arbitrary (nT)
 
         loc = [
-            message['location']['coords']['latitude'],
-            message['location']['coords']['longitude'],
-            message['location']['coords']['altitude'],
-            message['location']['coords']['heading'] if message['location']['coords']['heading'] >= 0 else None,
-            message['location']['coords']['speed'] if message['location']['coords']['speed'] >= 0 else None,
+            message['location']['coords']['latitude'],  # deg
+            message['location']['coords']['longitude'],  # deg
+            message['location']['coords']['altitude'],  # meters
+            message['location']['coords']['heading'] if message['location']['coords']['heading'] >= 0 else None,  # deg
+            message['location']['coords']['speed'] if message['location']['coords']['speed'] >= 0 else None,  # m / s
         ]
+
+        print('run_nav input:', message['time'] / 1000, acc, acc_nog, gyro, mag, loc)
 
         try:
             payload = run_nav(
