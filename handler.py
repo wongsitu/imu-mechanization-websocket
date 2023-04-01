@@ -27,8 +27,6 @@ def websocket_handler(event, context):
     elif route == '$disconnect':
         return {'statusCode': 200}
     elif route == '$default':
-        message = event.get('body', {})
-
         connectionId = event.get('requestContext', {}).get('connectionId')
         message = event.get('body', {})
         message = json.loads(message)
@@ -36,7 +34,7 @@ def websocket_handler(event, context):
         print(message)
 
         if 'nav' not in globals():
-            drag = message['drag'] if message['drag'] > 0 else None
+            drag = message['drag'] if message['drag'] > 1e-8 else None
             set_nav(message['displacement'], message['isSupercharged'], drag)
 
         acc = array(
@@ -79,9 +77,12 @@ def websocket_handler(event, context):
             message['location']['coords']['speed'] if message['location']['coords']['speed'] >= 0 else None,
         ]
 
-        payload = run_nav(
-            t=message['time'] / 1000, acc=acc, acc_nog=acc_nog, gyro=gyro, mag=mag, loc=loc
-        )  # Convert time from ms to s
+        try:
+            payload = run_nav(
+                t=message['time'] / 1000, acc=acc, acc_nog=acc_nog, gyro=gyro, mag=mag, loc=loc
+            )  # Convert time from ms to s
+        except Exception as e:
+            print(e)
 
         client.post_to_connection(ConnectionId=connectionId, Data=json.dumps(payload).encode('utf-8'))
         return {'statusCode': 200}
@@ -123,12 +124,12 @@ def run_nav(t, acc, acc_nog, gyro, mag, loc):
         nav.process_gps_update(t, *loc)
 
     fuel = nav.get_fuel(return_totals=False)
-    emissions = nav.get_emissions(return_totals=False)
-    speed = nav.get_motion(speed_only=True)
+    # emissions = nav.get_emissions(return_totals=False)
+    # speed = nav.get_motion(speed_only=True)
 
-    print("RETURNED PAYLOAD: ", {**fuel, **emissions, **speed})
+    # print("RETURNED PAYLOAD: ", {**fuel, **emissions, **speed})
 
-    return {**fuel, **emissions, **speed}
+    return fuel  # {**fuel, **emissions, **speed}
 
 
 def end_nav():
