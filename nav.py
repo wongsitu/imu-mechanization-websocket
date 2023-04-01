@@ -109,7 +109,7 @@ class Nav:
         self.prev_alt_timestamp = None
         # self.total_distance = 0
         self.prev_lat_long = None
-        self.gps_it = 0
+        self.gps_time = 0
 
         # Initialize parameters for the AHRS algorithm
         self.ahrs = None  # AHRS algorithm
@@ -366,11 +366,10 @@ class Nav:
         Returns:
             None
         '''
-        # Return if there is no GPS update
-        if self.prev_lat_long == (lat, long) and self.gps_pass_its < round(1 / self.period):
-            self.gps_it += 1
+        # Return if there is no GPS update and a second has not passed
+        if self.prev_lat_long == (lat, long) and timestamp - self.gps_time < 1:
             return
-        self.gps_it = 0
+        self.gps_time = timestamp
 
         # Return if we can't compute rotation matrices
         if self.latest_raw_imu is None:
