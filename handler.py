@@ -124,12 +124,12 @@ def run_nav(t, acc, acc_nog, gyro, mag, loc):
         nav.process_gps_update(t, *loc)
 
     fuel = nav.get_fuel(return_totals=False)
-    # emissions = nav.get_emissions(return_totals=False)
-    # speed = nav.get_motion(speed_only=True)
+    emissions = nav.get_emissions(return_totals=False)
+    speed = nav.get_motion(speed_only=True)
 
-    # print("RETURNED PAYLOAD: ", {**fuel, **emissions, **speed})
+    print("RETURNED PAYLOAD: ", {**fuel, **emissions, **speed})
 
-    return fuel  # {**fuel, **emissions, **speed}
+    return {**fuel, **emissions, **speed}
 
 
 def end_nav():
