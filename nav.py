@@ -137,8 +137,8 @@ class Nav:
 
         # Instantiate parameters to track fuel use
         # Update these every time we update the velocity
-        self.current_fc = 0  # Current fuel consumption in mL / s
-        self.total_fc = 0  # Total fuel consumption in L
+        self.current_fc = 0.0  # Current fuel consumption in mL / s
+        self.total_fc = 0.0  # Total fuel consumption in L
         sos = butter(2, fc_smoothing_critical_freq, output='sos', fs=None, btype='lowpass')[0]
         self.fc_filter = PureLiveSosFilter(sos) if smooth_fc else None
         self.imu_damping = imu_damping
