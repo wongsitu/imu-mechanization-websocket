@@ -16,7 +16,7 @@ from scipy.signal import butter
 DEG_TO_RAD = pi / 180
 
 # Speed smoother
-sos = butter(2, 0.05, output='sos', fs=None, btype='lowpass')[0]
+sos = butter(2, 0.5, output='sos', fs=None, btype='lowpass')[0]
 speed_filter = PureLiveSosFilter(sos)
 
 client = boto3.client(
@@ -101,12 +101,12 @@ def websocket_handler(event, context):
 def set_nav(displacement=None, is_supercharged=None, drag_coeff=None):
     global nav
     nav = Nav(
-        smoothing_critical_freq=0.03,
+        smoothing_critical_freq=0.2,
         vz_depth=3,
         period=0.25,
         algo='madgwick',
         smooth_fc=True,
-        fc_smoothing_critical_freq=0.02,
+        fc_smoothing_critical_freq=0.5,
         imu_damping=0.05,
         fc_reduction_factor=0.5,
         displacement=displacement,
