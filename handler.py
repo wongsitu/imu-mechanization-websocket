@@ -86,13 +86,12 @@ def websocket_handler(event, context):
                 t=message['time'] / 1000, acc=acc, acc_nog=acc_nog, gyro=gyro, mag=mag, loc=loc
             )  # Convert time from ms to s
             print("RETURNED PAYLOAD (SUCCESS): ", payload)
-            client.post_to_connection(ConnectionId=connectionId, Data=json.dumps(payload).encode('utf-8'))
         except Exception as e:
             print(e)
             payload = {**nav.get_motion(speed_only=True), **nav.get_emissions(), **nav.get_fuel()}
             print("RETURNED PAYLOAD (FAILURE): ", payload)
-            client.post_to_connection(ConnectionId=connectionId, Data=json.dumps(payload).encode('utf-8'))
 
+        client.post_to_connection(ConnectionId=connectionId, Data=json.dumps(payload).encode('utf-8'))
         return {'statusCode': 200}
     else:
         return {'statusCode': 400, 'body': 'Unknown WebSocket event'}
