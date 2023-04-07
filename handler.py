@@ -133,9 +133,9 @@ def run_nav(t, acc, acc_nog, gyro, mag, loc):
     nav.process_imu_update(t, acc, acc_nog, gyro, mag)
     nav.process_gps_update(t, *loc)
 
-    fuel = nav.get_fuel(return_totals=False)
-    emissions = nav.get_emissions(return_totals=False)
-    speed = nav.get_motion(speed_only=True)
+    fuel = nav.get_fuel(return_totals=False, max_digits=10)
+    emissions = nav.get_emissions(return_totals=False, max_digits=10)
+    speed = nav.get_motion(speed_only=True, max_digits=10)
 
     speed['speed'] = speed_filter.process(speed['speed'])
 
@@ -144,6 +144,6 @@ def run_nav(t, acc, acc_nog, gyro, mag, loc):
 
 def end_nav():
     global nav
-    trip_metrics = nav.get_trip_metrics()
+    trip_metrics = nav.get_trip_metrics(max_digits=10)
     del nav
     return trip_metrics

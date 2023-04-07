@@ -646,7 +646,7 @@ class Nav:
             **totals,
         }
 
-    def get_trip_metrics(self):
+    def get_trip_metrics(self, max_digits: Union[int, None] = None):
         '''
         Compute aggregate metrics about the current trip
 
@@ -659,4 +659,6 @@ class Nav:
             elapsed_time = self.prev_timestamp + self.period - self.t0
 
         # return self.total_distance, elapsed_time
+        if max_digits is not None:
+            return float(str(elapsed_time)[: max_digits + 1])
         return elapsed_time
