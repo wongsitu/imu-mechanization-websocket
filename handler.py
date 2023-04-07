@@ -88,7 +88,11 @@ def websocket_handler(event, context):
             print("RETURNED PAYLOAD (SUCCESS): ", payload)
         except Exception as e:
             print(e)
-            payload = {**nav.get_motion(speed_only=True), **nav.get_emissions(), **nav.get_fuel()}
+            payload = {
+                **nav.get_motion(speed_only=True, max_digits=10),
+                **nav.get_emissions(return_totals=False, max_digits=10),
+                **nav.get_fuel(return_totals=False, max_digits=10),
+            }
             print("RETURNED PAYLOAD (FAILURE): ", payload)
 
         client.post_to_connection(ConnectionId=connectionId, Data=json.dumps(payload).encode('utf-8'))

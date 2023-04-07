@@ -458,7 +458,7 @@ class Nav:
 
         self.prev_lat_long = (lat, long)
 
-    def get_motion(self, speed_only=True) -> dict:
+    def get_motion(self, speed_only=True, max_digits: Union[int, None] = None) -> dict:
         '''
         Get the current velocity and acceleration
 
@@ -471,7 +471,14 @@ class Nav:
         if speed_only:
             speed = sqrt(self.v[1] ** 2 + self.v[2] ** 2)
             assert isinstance(speed, (float, int)) and not isnan(speed), 'ERROR: Speed is not a float'
+            if max_digits is not None:
+                return {'speed': float(str(speed)[: max_digits + 1])}
             return {'speed': speed}
+        if max_digits is not None:
+            return {
+                'velocity': float(str(self.v)[: max_digits + 1]),
+                'acceleration': float(str(self.a)[: max_digits + 1]),
+            }
         return {'velocity': self.v, 'acceleration': self.a}
 
     def set_vehicle_params(
@@ -534,7 +541,7 @@ class Nav:
             self.current_fc = self.fc_filter.process(self.current_fc)
         self.total_fc += self.current_fc * timestep * 0.001  # Convert mL to L
 
-    def get_fuel(self, return_totals: bool = False) -> dict:
+    def get_fuel(self, return_totals: bool = False, max_digits: Union[int, None] = None) -> dict:
         '''
         Return the best estimates of the current and total fuel consumption
 
@@ -552,10 +559,17 @@ class Nav:
             assert isinstance(self.total_fc, (float, int)) and not isnan(
                 self.total_fc
             ), 'ERROR: Total FC is not an int or float'
+            if max_digits is not None:
+                return {
+                    'fuel_current': float(str(self.current_fc)[: max_digits + 1]),
+                    'fuel_total': float(str(self.total_fc)[: max_digits + 1]),
+                }
             return {'fuel_current': self.current_fc, 'fuel_total': self.total_fc}
+        if max_digits is not None:
+            return {'fuel_current': float(str(self.current_fc)[: max_digits + 1])}
         return {'fuel_current': self.current_fc}
 
-    def get_emissions(self, return_totals: bool = False) -> dict:
+    def get_emissions(self, return_totals: bool = False, max_digits: Union[int, None] = None) -> dict:
         '''
         Return the best estimates of the current and cumulative emissions
 
@@ -579,13 +593,22 @@ class Nav:
         particulate_current = EMISSIONS_TO_PARTICULATE * emissions_current
         hc_current = EMISSIONS_TO_HC * emissions_current
 
-        emissions = {
-            'co2_current': co2_current,
-            'co_current': co_current,
-            'nox_current': nox_current,
-            'particulate_current': particulate_current,
-            'unburned_hc_current': hc_current,
-        }
+        if max_digits is None:
+            emissions = {
+                'co2_current': co2_current,
+                'co_current': co_current,
+                'nox_current': nox_current,
+                'particulate_current': particulate_current,
+                'unburned_hc_current': hc_current,
+            }
+        else:
+            emissions = {
+                'co2_current': float(str(co2_current)[: max_digits + 1]),
+                'co_current': float(str(co_current)[: max_digits + 1]),
+                'nox_current': float(str(nox_current)[: max_digits + 1]),
+                'particulate_current': float(str(particulate_current)[: max_digits + 1]),
+                'unburned_hc_current': float(str(hc_current)[: max_digits + 1]),
+            }
 
         assert all(
             isinstance(x, (float, int)) and not isnan(x) for x in emissions.values()
@@ -601,15 +624,26 @@ class Nav:
         particulate_total = EMISSIONS_TO_PARTICULATE * emissions_total
         hc_total = EMISSIONS_TO_HC * emissions_total
 
-        return {
-            **emissions,
-            **{
+        if max_digits is None:
+            totals = {
                 'co2_total': co2_total,
                 'co_total': co_total,
                 'nox_total': nox_total,
                 'particulate_total': particulate_total,
                 'unburned_hc_total': hc_total,
-            },
+            }
+        else:
+            totals = {
+                'co2_total': float(str(co2_total)[: max_digits + 1]),
+                'co_total': float(str(co_total)[: max_digits + 1]),
+                'nox_total': float(str(nox_total)[: max_digits + 1]),
+                'particulate_total': float(str(particulate_total)[: max_digits + 1]),
+                'unburned_hc_total': float(str(hc_total)[: max_digits + 1]),
+            }
+
+        return {
+            **emissions,
+            **totals,
         }
 
     def get_trip_metrics(self):
