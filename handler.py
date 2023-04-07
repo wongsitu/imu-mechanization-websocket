@@ -14,6 +14,7 @@ from scipy.signal import butter
 
 # GRAVITY = 9.80665  # m / s ** 2
 DEG_TO_RAD = pi / 180
+MAX_DIGITS = 10
 
 # Speed smoother
 sos = butter(2, 0.35, output='sos', fs=None, btype='lowpass')[0]
@@ -89,9 +90,9 @@ def websocket_handler(event, context):
         except Exception as e:
             print(e)
             payload = {
-                **nav.get_motion(speed_only=True, max_digits=10),
-                **nav.get_emissions(return_totals=False, max_digits=10),
-                **nav.get_fuel(return_totals=False, max_digits=10),
+                **nav.get_motion(speed_only=True, max_digits=MAX_DIGITS),
+                **nav.get_emissions(return_totals=False, max_digits=MAX_DIGITS),
+                **nav.get_fuel(return_totals=False, max_digits=MAX_DIGITS),
             }
             print("RETURNED PAYLOAD (FAILURE): ", payload)
 
@@ -133,9 +134,9 @@ def run_nav(t, acc, acc_nog, gyro, mag, loc):
     nav.process_imu_update(t, acc, acc_nog, gyro, mag)
     nav.process_gps_update(t, *loc)
 
-    fuel = nav.get_fuel(return_totals=False, max_digits=10)
-    emissions = nav.get_emissions(return_totals=False, max_digits=10)
-    speed = nav.get_motion(speed_only=True, max_digits=10)
+    fuel = nav.get_fuel(return_totals=False, max_digits=MAX_DIGITS)
+    emissions = nav.get_emissions(return_totals=False, max_digits=MAX_DIGITS)
+    speed = nav.get_motion(speed_only=True, max_digits=MAX_DIGITS)
 
     speed['speed'] = speed_filter.process(speed['speed'])
 
@@ -144,6 +145,6 @@ def run_nav(t, acc, acc_nog, gyro, mag, loc):
 
 def end_nav():
     global nav
-    trip_metrics = nav.get_trip_metrics(max_digits=10)
+    trip_metrics = nav.get_trip_metrics(max_digits=MAX_DIGITS)
     del nav
     return trip_metrics
