@@ -18,6 +18,7 @@ AIR_DENSITY = 1.225  # density at STP in kg / m ** 3
 DRAG_CONVERSION = 0.07803855  # frontal area in drag is in units of 0.84 ft ** 2 - this converts to m ** 2
 DEFAULT_DRAG = AIR_DENSITY * 0.004834396004686504 * 0.5 * DRAG_CONVERSION  # Mean drag coefficient over all cars
 DEG_TO_RAD = pi / 180
+MPS_TO_KPH = 3.6
 GAS_TO_EMISSIONS = 2.31  # 2.31 kg of CO2 produced for every litre of gasoline burned
 EMISSIONS_TO_CO2 = 0.95  # proportion of CO2 produced
 EMISSIONS_TO_CO = 0.01  # proportion of CO produced
@@ -458,28 +459,33 @@ class Nav:
 
         self.prev_lat_long = (lat, long)
 
-    def get_motion(self, speed_only=True, max_digits: Union[int, None] = None) -> dict:
+    def get_motion(self, speed_only: bool = True, max_digits: Union[int, None] = None, kmh: bool = False) -> dict:
         '''
         Get the current velocity and acceleration
 
         Args:
             speed_only: bool - If true, only return the speed of the vehicle
+            max_digits: int | None - Maximum number of digits in the result
+            kmh: bool - If true, return the result in km/h
 
         Returns:
             dict - most recent velocity and acceleration in the vehicle frame
         '''
+        unit_conversion = MPS_TO_KPH if kmh else 1
+
         if speed_only:
-            speed = sqrt(self.v[1] ** 2 + self.v[2] ** 2)
+            speed = sqrt(self.v[1] ** 2 + self.v[2] ** 2) * unit_conversion
             assert isinstance(speed, (float, int)) and not isnan(speed), 'ERROR: Speed is not a float'
             if max_digits is not None:
                 return {'speed': float(str(speed)[: max_digits + 1])}
             return {'speed': speed}
+
         if max_digits is not None:
             return {
-                'velocity': float(str(self.v)[: max_digits + 1]),
-                'acceleration': float(str(self.a)[: max_digits + 1]),
+                'velocity': float(str(self.v * unit_conversion)[: max_digits + 1]),
+                'acceleration': float(str(self.a * unit_conversion)[: max_digits + 1]),
             }
-        return {'velocity': self.v, 'acceleration': self.a}
+        return {'velocity': self.v * unit_conversion, 'acceleration': self.a * unit_conversion}
 
     def set_vehicle_params(
         self,
@@ -547,6 +553,7 @@ class Nav:
 
         Args:
             return_totals: bool - Whether or not to return total consumption information
+            max_digits: int | None - Maximum number of digits in the result
 
         Returns:
             dict: Current fuel usage in mL / s and total fuel usage in L
@@ -575,6 +582,7 @@ class Nav:
 
         Args:
             return_totals: bool - Whether or not to return total emissions information
+            max_digits: int | None - Maximum number of digits in the result
 
         Returns:
             dict: Current and total emissions information.
