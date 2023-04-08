@@ -17,7 +17,7 @@ DEG_TO_RAD = pi / 180
 MAX_DIGITS = 10
 
 # Speed smoother
-sos = butter(2, 0.35, output='sos', fs=None, btype='lowpass')[0]
+sos = butter(2, 0.45, output='sos', fs=None, btype='lowpass')[0]
 speed_filter = PureLiveSosFilter(sos)
 
 client = boto3.client(
@@ -110,9 +110,9 @@ def set_nav(displacement=None, is_supercharged=None, drag_coeff=None):
         period=0.25,
         algo='madgwick',
         smooth_fc=True,
-        fc_smoothing_critical_freq=0.65,
+        fc_smoothing_critical_freq=0.72,
         imu_damping=0.05,
-        fc_reduction_factor=0.5,
+        fc_reduction_factor=0.4,
         displacement=displacement,
         is_supercharged=is_supercharged,
         drag_coeff=drag_coeff,
