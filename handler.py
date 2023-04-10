@@ -136,7 +136,7 @@ def run_nav(t, acc, acc_nog, gyro, mag, loc):
 
     fuel = nav.get_fuel(return_totals=False, max_digits=MAX_DIGITS)
     emissions = nav.get_emissions(return_totals=False, max_digits=MAX_DIGITS)
-    speed = nav.get_motion(speed_only=True, max_digits=MAX_DIGITS)
+    speed = nav.get_motion(speed_only=True, max_digits=MAX_DIGITS, kmh=True)
 
     speed['speed'] = speed_filter.process(speed['speed'])
 

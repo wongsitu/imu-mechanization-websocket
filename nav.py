@@ -18,7 +18,7 @@ AIR_DENSITY = 1.225  # density at STP in kg / m ** 3
 DRAG_CONVERSION = 0.07803855  # frontal area in drag is in units of 0.84 ft ** 2 - this converts to m ** 2
 DEFAULT_DRAG = AIR_DENSITY * 0.004834396004686504 * 0.5 * DRAG_CONVERSION  # Mean drag coefficient over all cars
 DEG_TO_RAD = pi / 180
-MPS_TO_KPH = 3.6
+MPS_TO_KMH = 3.6
 GAS_TO_EMISSIONS = 2.31  # 2.31 kg of CO2 produced for every litre of gasoline burned
 EMISSIONS_TO_CO2 = 0.95  # proportion of CO2 produced
 EMISSIONS_TO_CO = 0.01  # proportion of CO produced
@@ -471,7 +471,7 @@ class Nav:
         Returns:
             dict - most recent velocity and acceleration in the vehicle frame
         '''
-        unit_conversion = MPS_TO_KPH if kmh else 1
+        unit_conversion = MPS_TO_KMH if kmh else 1
 
         if speed_only:
             speed = sqrt(self.v[1] ** 2 + self.v[2] ** 2) * unit_conversion

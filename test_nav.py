@@ -95,7 +95,7 @@ for i, t in enumerate(timestamps):
     hc.append(emissions['unburned_hc_current'])
     thc.append(emissions['unburned_hc_total'])
 
-    vel_acc = nav.get_motion(speed_only=False)
+    vel_acc = nav.get_motion(speed_only=False, kmh=True)
     v.append(vel_acc['velocity'])
     a.append(vel_acc['acceleration'])
 t1 = time.perf_counter()
